@@ -1,0 +1,14 @@
+#Bloqueia o helo
+
+#^ylmf-pc                   Auth multiple fail
+^localhost.*		    Fake network host
+^user			    Incorrect
+^([[]*)127[.].*		    Fake ip address
+#^([[]*)192[.]168[.].*	    Fake ip address
+#^([[]*)172[.]16[.].*	    Fake ip address
+#^([[]*)10[.].*		    Fake ip address
+
+#^(\d|[[.-_=])+.*           Fake numbers only
+#^.*-.*-.*-.*               Id stranged
+
+.*[.]gvarev[.]com[.]br	    2016 - MARKETING

@@ -1,0 +1,85 @@
+###########################################################################
+#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe o autor sobre falhas ou incremento de funcoes            *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+
+#- Boleto: Solictacao de rodrigo.nunez@insidesistemas.com.br
+# http://10.10.0.100:9596/portalservice
+# http://10.10.0.100:9596/dashboard
+# http://10.10.0.100:9596/geradorrelatorio
+# Acesso externo IntegraService
+# http://10.10.0.100:9596/
+
+<VirtualHost *:80>
+    ServerName  boleto.metropol.com.br
+    ServerAlias cliente.metropol.com.br
+    ServerAlias clientes.metropol.com.br
+    ServerAlias boleto.monital.com.br
+    ServerAlias cliente.monital.com.br
+    ServerAlias clientes.monital.com.br
+    SetEnv no-gzip dont-vary
+    RequestHeader    unset  Accept-Encoding
+    FileETag None
+    ContentDigest off
+    LimitInternalRecursion 25
+
+    RewriteEngine on
+    RewriteCond %{REQUEST_URI} ^/$
+    RewriteRule (.*) /portalservice/ [R=301]
+
+    <IfModule mod_proxy.c>
+        ProxyRequests Off
+        ProxyVia Full
+        ProxyPreserveHost On
+        ProxyErrorOverride Off
+        ProxyPass / http://10.10.0.100:9596/
+        ProxyPassReverse / http://10.10.0.100:9596/
+    </IfModule>
+    LogFormat "%v %h %{cookie}n %t \"%r\" %>s %b %T \"%{Referer}i\" \"%{User-Agent}i\"" logboleto
+    CustomLog /var/log/apache2/boleto-access.log logboleto
+</VirtualHost>
+
+
+<IfModule mod_ssl.c>
+    <VirtualHost *:443>
+        SSLEngine on
+        # SSLProtocol all
+        SSLProtocol -all +TLSv1.2
+        # SSLCipherSuite HIGH:MEDIUM
+        SSLCipherSuite HIGH
+        SSLOptions StrictRequire
+        SSLCertificateFile    /etc/ssl/crt/server/monital.crt
+        SSLCertificateKeyFile /etc/ssl/crt/server/monital.rsa.key
+        ServerName  boleto.metropol.com.br
+	ServerAlias cliente.metropol.com.br
+	ServerAlias clientes.metropol.com.br
+	ServerAlias boleto.monital.com.br
+	ServerAlias cliente.monital.com.br
+	ServerAlias clientes.monital.com.br
+	SetEnv no-gzip dont-vary
+	RequestHeader    unset  Accept-Encoding
+	FileETag None
+	ContentDigest off
+	LimitInternalRecursion 25
+
+        RewriteEngine on
+	RewriteCond %{REQUEST_URI} ^/$
+	RewriteRule (.*) /portalservice/ [R=301]
+
+        <IfModule mod_proxy.c>
+	    ProxyRequests Off
+    	    ProxyVia Full
+    	    ProxyPreserveHost On
+    	    ProxyErrorOverride Off
+    	    ProxyPass / http://10.10.0.100:9596/
+    	    ProxyPassReverse / http://10.10.0.100:9596/
+	</IfModule>
+	LogFormat "%v %h %{cookie}n %t \"%r\" %>s %b %T \"%{Referer}i\" \"%{User-Agent}i\"" logboleto
+	CustomLog /var/log/apache2/boleto-access.log logboleto
+    </VirtualHost>
+</IfModule>
+
+

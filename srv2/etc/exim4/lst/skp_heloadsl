@@ -1,0 +1,5 @@
+#Nao verifica helo ou adsl
+
+200.196.48.0/24
+200.85.40.0/24
+200.142.86.57           #intravel.com.br

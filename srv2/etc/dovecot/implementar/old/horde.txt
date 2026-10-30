@@ -1,0 +1,8 @@
+$servers['imap'] = array(
+    'name' => 'IMAP Server',
+    'server' => 'localhost',
+    'hordeauth' => false,
+    'protocol' => 'imap/notls',
+    'port' => 143,
+    'quota' => array('driver'=>'imap'),
+);

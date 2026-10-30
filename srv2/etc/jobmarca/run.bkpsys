@@ -1,0 +1,344 @@
+#!/bin/bash
+#############################################################################
+# Feito por Silmar A. Marca 
+# smarca@gmail.com - extrair com tar -zxf --preserve backup.tar.gz ou usar o mc
+#############################################################################
+# https://help.ubuntu.com/community/Servers
+#cd / ;  find . -xdev | cpio -pm /srv/bkp
+# diff <(tar -tvf srv2_2017-08-05.tbz2.bkp | sort) <(tar -tvf srv2_2017-08-04.tbz2.bkp | sort)
+
+#Definir emails
+LOGNAME=marca@$(/bin/hostname -s).$(/bin/dnsdomainname)
+EMAIL=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+REPLYTO=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+MAILTO=alerta@`hostname`.`dnsdomainname`
+TMPDIR=/tmp
+export EMAIL REPLYTO MAILTO LOGNAME TMPDIR
+
+#Datas
+now="$(date +"%Y-%m-%d")"
+lastmonth="$(date --date='1 month ago' +"%Y-%m-%d")"
+
+#Definir nomes de arquivos e diretorios
+Dirback=/srv/bkp/`/bin/hostname -s`/sys/					
+Arqback=$Dirback/"`/bin/hostname -s``/bin/date +_%Y-%m-%d.tbz2.bkp`"
+Arqext=$Dirback/"`/bin/hostname -s`_ext.tbz2.bkp"
+Arqlstpkg=$Dirback/"`/bin/hostname -s``/bin/date +_pkg.log`"		
+Arqinfo="/tmp/info.txt" ; Arqzip="/tmp/info.zip" 
+Lstnewf=$Dirback/"`/bin/hostname -s``/bin/date +_%Y-%m-%d.log`"		
+Lstback=/tmp/"`/bin/hostname -s``/bin/date +_%Y-%m-%d.lst`"
+LinBKP=$((`/bin/egrep -n '^exit 0' $0  | cut -f1 -d ':'`+1))
+
+#Criar diretorios 
+mkdir -p `dirname $Arqback`
+mkdir -p $Dirback     
+cd $Dirback
+/bin/sync
+
+#Limpa listas temporarias
+rm ${Lstback}.* 2> /dev/null
+
+#Criar listagem de arquivos que serao excluidos do backup
+find `/usr/bin/tail --lines=+${LinBKP} $0 | /bin/egrep '^([-]) ' | cut -f2 -d ' '` -type f 2> /dev/null  > ${Lstback}.del
+#Criar listagem de arquivos extra do backup
+find `/usr/bin/tail --lines=+${LinBKP} $0 | /bin/egrep '^([+]) ' | cut -f2 -d ' '` -type f 2> /dev/null  > ${Lstback}.ext
+#Criar listagem de arquivos que serao adicionados no backup
+find `/usr/bin/tail --lines=+${LinBKP} $0 | /bin/egrep -v "^( |[#]|[-]|[+])"` -type f | grep -v -f ${Lstback}.del > ${Lstback}.add 
+#Criar listagem de arquivos que foram mudados nas ultimas 24 horas (Apenas informativo) - apaga arquivo tamanho zero se nada foi mudado nas 24hs
+find `cat ${Lstback}.add` -mtime 0 -fprint ${Lstnewf} 
+
+#Efetuar o backup compactado do sistema dos arquivos .add
+/bin/tar --same-owner --touch --preserve-permissions --atime-preserve --dereference --absolute-names --files-from ${Lstback}.add --exclude-from ${Lstback}.del -jcf $Arqback 
+#Efetuar o backup compactado do sistema dos arquivos .ext
+/bin/tar --same-owner --touch --preserve-permissions --atime-preserve --dereference --absolute-names --files-from ${Lstback}.ext --exclude-from ${Lstback}.del -jcf $Arqext 
+
+#Remove arquivos duplicados
+fdupes -fqrdN $Dirback 2>/dev/null >/dev/null
+
+#Se está duplicado, sem nada novo, sai do backup
+if [ ! -f $Arqback ]; then
+    logger -t Backup: configuracoes de sistema igual ja existente... 
+    exit
+fi
+
+#Definir assuntos do email etc
+Subject="BKP-Metropol `/bin/hostname` - `/bin/date +%Y-%b-%d" "%T" "\(%a\)` $*" 
+Mensagem="$Subject
+[Uptime]:
+`/usr/bin/uptime`
+----------------------------------------------------------- 
+[Espaco em disco]: 
+`df -h | grep -e '^[/]'`
+----------------------------------------------------------- 
+[Principais diretorios]:
+`du -hs /srv/*/ /srv/smb/*/ /home/ --exclude=/srv/smb/ | grep -v 'lost' | sort -r -h`
+----------------------------------------------------------- 
+[SysInfo]
+`landscape-sysinfo  | egrep -iv '(landscape|graph)'`
+`if [ -f /var/run/reboot-required ]; then   echo '*** Atualizacoes feitas ou Reinicio Necessario ***'; fi`
+----------------------------------------------------------- 
+[Versao LSB]:
+`uname -a`
+`lsb_release -a 2> /dev/null`
+----------------------------------------------------------- 
+[Logins Atuais]: 
+`/usr/bin/w`
+----------------------------------------------------------- 
+[Ultimos Logins]: 
+`/usr/bin/lastlog | grep -v Never`
+----------------------------------------------------------- 
+[Estado espelhamento]: 
+`cat /proc/mdstat`
+`mdadm --query --detail /dev/md* 2> /dev/null`
+----------------------------------------------------------- 
+[Estacoes Rede Windows]:
+`cat /srv/www/default/stat/macs/smb_hosts.txt`
+----------------------------------------------------------- 
+[Estacoes Ativas]:
+`cat /srv/www/default/stat/macs/cln_arp.txt`
+----------------------------------------------------------- 
+[Estacoes DHCP]:
+`cat /srv/www/default/stat/macs/cln_dhcp.txt`
+----------------------------------------------------------- 
+[ClientesSMB neste Momento]: 
+`smbstatus -b | tail -n +5 | sort -u -k1,1 | sort -k4,1 & smbstatus -S | tail -n +4 | sort -u -k2,2 | sort -k3,1`
+
+ 
+* Arquivo de Backup em Anexo : `basename $Arqback`
+* Estatisticas e Outras informacoes em Anexo: info.txt  
+"
+
+#Definir arquivo de informacoes de pacotes
+apt list --installed 2> /dev/null > $Arqlstpkg ; unix2dos $Arqlstpkg 2> /dev/null > /dev/null  
+#Definir arquivo de informacoes extra
+echo "[Armazenamento  ]"     >> $Arqinfo ;/bin/lsblk -o +UUID -o NAME,KNAME,TYPE,SIZE,MOUNTPOINT,LABEL,PARTTYPE,FSTYPE,MODEL,SERIAL,UUID 2> /dev/null 	>> $Arqinfo   
+echo "[Portas Abertas  ]"    >> $Arqinfo ;/bin/netstat -apnoev 	2> /dev/null 	>> $Arqinfo   
+echo "[Estatisticas    ]"    >> $Arqinfo ;/bin/netstat -s    				>> $Arqinfo
+echo "[Processos Ativos]"    >> $Arqinfo ;/bin/ps fxlwww     				>> $Arqinfo
+dos2unix $Arqinfo 2> /dev/null ; unix2dos $Arqinfo 2> /dev/null ; rm $Arqzip 2> /dev/null ; zip -X -j -m $Arqzip $Arqinfo $Arqlstpkg 2> /dev/null > /dev/null
+
+rm -f ${Lstback}.del ${Lstback}.add ${Lstback}.ext 
+
+#Enviar mensagem contendo informacoes e anexos
+echo -e "$Mensagem" | /usr/bin/mutt -a $Arqback -a $Arqext -a $Arqzip -s "$Subject" -- $MAILTO
+#Efetuar loggin do backup
+logger -t Backup: configuracoes de sistema - ${Arqback}...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+exit 0
+#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#- Inicio dos arquivos para Backup #-#-#-#-#-#-#-#-#-#-#-#-#-##-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+#/etc/default/shellinabox
+/srv/www/default/painel/*
+/srv/www/default/autodiscover/*
+/srv/www/default/proxy/*
+/srv/www/default/access/.htdigest
+/srv/www/default/access/.htpasswd
+/srv/www/default/stat/www/leiame.txt
+/etc/hostname
+/etc/default/grub
++ /boot/grub/grub.cfg
++ /boot/grub/menu.lst
++ /etc/passwd
+/etc/fstab
+/etc/sudoers
+/etc/sysctl.d/99-marca.conf
+/srv/www/home/srv2.metropol.com.br/index.htm
+/etc/hosts.allow
+/etc/hosts.deny
+/etc/default/xinetd
+/etc/xinetd.d/telnet
+/etc/xinetd.d/virdom
+/etc/pam.d/virdom
+/etc/hosts
+/etc/networks
+/etc/cron.d/job*
+/etc/jobmarca/*
+/etc/ssh/sshd_config
+/etc/ssh/keymake.sh
+/etc/ssh/issue
+/etc/resolv.conf
+/etc/host.conf
+/etc/mailname
+/etc/network/interfaces
+/etc/keepalived/*
+/etc/udev/rules.d/70-persistent-net.rules
+/etc/issue
+/etc/issue.net
+#/etc/clamav/clamd.conf
+/etc/samba/smb.conf
+/etc/samba/smb.local.conf
+/etc/samba/mkgroup.sh
+/etc/samba/pwd.txt
+/srv/smb/prog/Suporte/logout.txt
+/etc/samba/smbusers
+/etc/logrotate.conf
+/etc/logrotate.d/marca
+/etc/logrotate.d/squid
+/etc/logrotate.d/exim4-base
+#/etc/ppp/pap-secrets
+#/etc/ppp/chap-secrets
+#/etc/ppp/peers/*
+#/etc/ppp/options
+#/etc/ppp/adsl.srv1
+#/etc/ppp/pppoe_on_boot
+/etc/default/linux-igd
+/etc/upnpd.conf
+#/etc/ipsec.conf
+#/etc/init/strongswan.override
+#/etc/xl2tpd/xl2tpd.conf
+#/etc/ipsec.secrets
+#/etc/ppp/ipsec-secrets
+#/etc/ppp/options.xl2tpd
+#/etc/default/bind9
+#/etc/default/rsyslog
+/etc/rsyslog.d/01-marca.conf
+/etc/default/mdadm
+#update-initramfs -u
+#Cuidado para resetar o UUID no arquivo mdadm.conf
+/etc/mdadm/mdadm.conf
+/etc/default/exim4
+/usr/share/perl5/Mail/SPF/*
+/usr/share/perl5/Net/CIDR/*
+#/etc/default/spamassassin
+/etc/apparmor.d/local/usr.sbin.dhcpd
+/etc/apparmor.d/local/usr.sbin.named
+/etc/apparmor.d/local/usr.sbin.mysqld
+/etc/profile.d/smarca.sh
+#/etc/skel/*
+/etc/default/isc-dhcp-server
+/etc/dhcp/dhcpd.conf
++ /var/lib/dhcp/*
+/etc/dshield/*
+- /etc/dshield/state/*
+/etc/squid/* 
+/etc/firewall/*
+/etc/bind/*
+- /etc/bind/zones/root/*
+- /etc/bind/*.mkeys
+- /etc/bind/*.jnl
+- /etc/bind/*.jnw 
+- /etc/bind/zones/slave/*
+- /etc/bind/zones/localnet/*.jnl
+- /etc/bind/zones/localnet/named.10
+- /etc/bind/zones/localnet/named.172.16
+- /etc/bind/zones/localnet/named.192.168
+- /etc/bind/zones/localnet/named.localnet
+#/etc/init.d/rc.local
+/srv/ftp/welcome.msg
+/etc/apache2/sites-enabled/*
+/etc/apache2/sites-available
+/etc/apache2/apache2.conf
+/usr/share/apache2/error/include/bottom.html
+/etc/phpmyadmin/config.inc.php
+/etc/rsync/*
+/etc/default/rsync
+/etc/exim4/*
+/etc/dovecot/*
+/etc/ntp.conf
+# /home/marca/.forward
+#/etc/php5/cli/php.ini
+#Inicio Horde - Preferencias caso mudadas em: conf.php, prefs.local.php ou prefs-servername.php
+#find | egrep -i "(local|conf).php$"
+/srv/www/default/webmail/config/motd.php
+/srv/www/default/webmail/config/prefs.local.php
+/srv/www/default/webmail/config/mime_drivers.local.php
+/srv/www/default/webmail/config/registry.local.php
+/srv/www/default/webmail/config/conf.php
+/srv/www/default/webmail/mnemo/config/prefs.local.php
+/srv/www/default/webmail/mnemo/config/conf.php
+/srv/www/default/webmail/passwd/config/hooks.php
+/srv/www/default/webmail/passwd/config/backends.local.php
+/srv/www/default/webmail/passwd/config/conf.php
+/srv/www/default/webmail/gollem/config/backends.local.php
+/srv/www/default/webmail/gollem/config/conf.php
+/srv/www/default/webmail/kronolith/config/prefs.local.php
+/srv/www/default/webmail/kronolith/config/conf.php
+/srv/www/default/webmail/nag/config/prefs.local.php
+/srv/www/default/webmail/nag/config/conf.php
+/srv/www/default/webmail/imp/config/hooks.php
+/srv/www/default/webmail/imp/config/prefs.local.php
+/srv/www/default/webmail/imp/config/mime_drivers.local.php
+/srv/www/default/webmail/imp/config/backends.local.php
+/srv/www/default/webmail/imp/config/conf.php
+/srv/www/default/webmail/turba/config/prefs.local.php
+/srv/www/default/webmail/turba/config/backends.local.php
+/srv/www/default/webmail/turba/config/conf.php
+#Final Horde
+/etc/ssl/crt/*
+/etc/proftpd/*
+/srv/smb/prog/sistema/LEIAME.TXT
+/srv/smb/bkup/Suporte/LEIAME.TXT
+/srv/smb/prog/Suporte/Marca/LEIAME.TXT
+/etc/default/fail2ban
+/etc/fail2ban/fail2ban.*
+/etc/fail2ban/jail.*
+/etc/fail2ban/filter.d/marca-*
+/etc/fail2ban/action.d/marca-*
+/etc/security/limits.d/smarca.conf
+/etc/mysql/mysql.conf.d/01-smarca.cnf
+/etc/mysql/mysql.conf.d/mysqld.cnf
+/etc/default/smartmontools
+/etc/default/rcS
+/srv/www/home/wordpress/default/*
+- /srv/www/home/wordpress/default/*.js
+/srv/www/home/wordpress/www/wp-config.php
+
+
+
+##### /var/lib/dhcp
+##### /etc/bind/zones/localnet
+##### 

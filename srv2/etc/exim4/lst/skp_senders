@@ -1,0 +1,6 @@
+#Permite estes senders, sem bloqueios por origem
+
+^(.*)@(.*[.])?google[.]com			#@calendar-server.bounces.google.com
+^(.*)@(.*[.])?(gov|jus)[.]br			#*.gov.br, *.jus.br
+
+^(.*)@(.*[.])?twitter[.]com			#

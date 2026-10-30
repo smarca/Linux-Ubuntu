@@ -1,0 +1,14 @@
+$TTL 600S
+@       IN      SOA     ns1.no-ip.com. suporte.monital.com.br. (
+                        5		; serial
+                        8H              ; refresh
+                        2H              ; retry
+                        4W              ; expire
+                        60S )           ; minimum
+
+                NS      ns1.no-ip.com.
+                NS      ns2.no-ip.com.
+                NS      ns3.no-ip.com.
+                NS      ns4.no-ip.com.
+                NS      ns5.no-ip.com.
+

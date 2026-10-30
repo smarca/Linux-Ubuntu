@@ -1,0 +1,3 @@
+#!/bin/bash
+[[ -z "`pidof dhcpd`" ]] && /bin/systemctl start isc-dhcp-server.service
+

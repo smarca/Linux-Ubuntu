@@ -1,0 +1,6 @@
+# symbolic names for networks, see networks(5) for more information
+link-local 		169.254.0.0
+a.localnet 		10.0.0.0
+copel.fix               177.220.156.176
+copel.dyn               192.168.1.0
+

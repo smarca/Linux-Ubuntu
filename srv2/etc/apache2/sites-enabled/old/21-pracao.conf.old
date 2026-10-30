@@ -1,0 +1,151 @@
+###########################################################################
+#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe o autor sobre falhas ou incremento de funcoes            *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+
+<VirtualHost *:80>
+    ServerName pracao.com.br
+    ServerAlias www.pracao.com.br
+    ServerAdmin suporte@pracao.com.br
+    #WORDPRESS: copiar de /usr/share/wordpress/
+    DocumentRoot 		"/srv/www/home/pracao.com.br/www/"
+    Alias /erro.php             "/srv/www/home/pracao.com.br/default/erro.php"
+    Alias /robots.txt           "/srv/www/home/pracao.com.br/default/robots.txt"
+    Alias /favicon.ico          "/srv/www/home/pracao.com.br/default/favicon.ico"
+    LogFormat "%v %h %{cookie}n %t \"%r\" %>s %b %T \"%{Referer}i\" \"%{User-Agent}i\"" logpracao
+    CustomLog /var/log/apache2/pracao.access.log logpracao
+    # RewriteLogLevel 1
+    # RewriteLog /var/log/apache2/pracao.rewrite.log
+    AddDefaultCharset UTF-8
+
+    #Expire
+    ExpiresActive On
+    ExpiresDefault "access plus 15 minutes"
+    ExpiresByType text/html "access plus 5 minutes"
+
+    # INICIO Browser Cache - Velocidade acima de confiabilidade no acesso
+    FileETag All
+    ContentDigest off
+
+    #SetOutputFilter DEFLATE
+    #SetInputFilter DEFLATE
+    <IfModule mod_deflate.c>
+	<IfModule mod_setenvif.c>
+    	    BrowserMatch ^Mozilla/4 gzip-only-text/html
+    	    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    	    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+    	    BrowserMatch \bMSI[E] !no-gzip !gzip-only-text/html
+	</IfModule>
+	<IfModule mod_headers.c>
+    	    Header append Vary User-Agent env=!dont-vary
+	</IfModule>
+	<IfModule mod_filter.c>
+	    AddOutputFilterByType DEFLATE text/richtex text/html text/plain text/xml text/xsd application/xml application/xhtml+xml text/javascript text/css application/x-javascript
+	</IfModule>
+    </IfModule>
+    SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png)$ no-gzip dont-vary
+    <FilesMatch "\.(css|js|CSS|JS)$">
+	FileETag None
+        ContentDigest off
+    </FilesMatch>
+    <FilesMatch "\.(html|htm|rtf|rtx|svg|svgz|txt|xsd|xsl|xml|HTML|HTM|RTF|RTX|SVG|SVGZ|TXT|XSD|XSL|XML)$">
+	FileETag None
+	ContentDigest off
+    </FilesMatch>
+    <FilesMatch "\.(asf|asx|wax|wmv|wmx|avi|bmp|class|divx|doc|docx|exe|gif|gz|gzip|ico|jpg|jpeg|jpe|mdb|mid|midi|mov|qt|mp3|m4a|mp4|m4v|mpeg|mpg|mpe|mpp|odb|odc|odf|odg|odp|ods|odt|ogg|pdf|png|pot|pps|ppt|pptx|ra|ram|swf|tar|tif|tiff|wav|wma|wri|xla|xls|xlsx|xlt|xlw|zip|ASF|ASX|WAX|WMV|WMX|AVI|BMP|CLASS|DIVX|DOC|DOCX|EXE|GIF|GZ|GZIP|ICO|JPG|JPEG|JPE|MDB|MID|MIDI|MOV|QT|MP3|M4A|MP4|M4V|MPEG|MPG|MPE|MPP|ODB|ODC|ODF|ODG|ODP|ODS|ODT|OGG|PDF|PNG|POT|PPS|PPT|PPTX|RA|RAM|SWF|TAR|TIF|TIFF|WAV|WMA|WRI|XLA|XLS|XLSX|XLT|XLW|ZIP)$">
+	FileETag All
+        ContentDigest off
+    </FilesMatch>
+    <FilesMatch "\.(xls|doc|pdf)$">
+    	ForceType application/octet-stream
+	Header set Content-Disposition attachment
+    </FilesMatch>
+    # check for existence of the cookie, before allowing download
+    # RewriteCond %{HTTP_COOKIE} (?!LicenseAcceptance=.+)   [I]
+    # RedirectRule ^/download/.*  /license.php?doc=$0      [I,L]
+    # RewriteCond %{HTTP_REFERER} ^(?!https?://www\.mysite\.net/)   [I]
+    # RewriteRule \.(?:gif|jpg|jpeg|png)$ /blocked.png              [I,L]
+</VirtualHost>
+
+
+#Diretorio de Download de Fotos etc
+<Directory /srv/www/home/pracao.com.br/www/wp-content/uploads>
+    FileETag All
+    ContentDigest off
+    ExpiresDefault M300
+</Directory>
+<Directory /srv/www/home/pracao.com.br/www>
+   php_admin_value user_dir                    "/srv/www/home/pracao.com.br/www"
+   #AllowOverride All	#Cuidado! Somente se realmente preciso criar o .htaccess
+   #-- Rewrite 
+    RewriteEngine On
+    <IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteBase /
+	#MailPress Plugin - Mail track
+	RewriteRule ^mail/analytics/([l|o])-([0-9]+)-([h|p])-([0-9a-zA-Z]+).html   wp-content/plugins/mailpress/mp-includes/action.php?tg=$1&mm=$2&co=$3&us=$4 [L]
+	#--- Exige www na frente. Substitui home, srv etc ou inclui www na falta deste
+	RewriteCond %{HTTPS} !=on
+	RewriteCond %{HTTP_HOST} !^www\.
+	RewriteRule ^(.*)$ http://www.%{HTTP_HOST}%{REQUEST_URI}?%{QUERY_STRING} [R=301,L]
+        #--- Hosts nao encontradas ou permlinks ativado. O proprio wordpress trata a URL. Para tudo, menos para imagens fixas ou docs fixos! Variaveis uteis: http://%{HTTP_HOST}/?h=%{HTTP_HOST}&u=%{REQUEST_URI}&q=%{QUERY_STRING}&t=%{TIME}
+	# BEGIN WordPress
+	RewriteRule ^index\.php$ - [L]
+	RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} !-f
+	RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} !-d
+	RewriteCond %{REQUEST_URI} !\.(?:gif|jpg|jpeg?|png|js|ico|swftiff?|asf|asx|wax|wmv|wmx|avi|bmp|class|divx|doc|docx|exe|gz|gzip|mdb|mid|midi|mov|qt|mp3|m4a|mp4|m4v|mpeg?|mpg|mpp|odb|odc|odf|odg|odp|ods|odt|ogg|pdf|pot|pps|ppt|pptx|ra|ram|tar|wav|wma|wri|xla|xls|xlsx|xlt|xlw|zip)$ [NC] 
+	RewriteRule . /index.php [L]
+	#--- Default Imagem quando inexistentes
+	# RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} !-f   
+	# RewriteRule ^images/.*\.jpg$ /images/default.jpg [L]  
+	#--- Unwanted HotLinks 2
+	#   RewriteCond expr "! %{HTTP_REFERER} -strmatch '*://%{HTTP_HOST}/*'"
+	#   RewriteRule ^/images - [F]
+	#--- Bloqueio Imagens tipo hotlinks
+	#    RewriteCond %{HTTP_REFERER} !^http://(.+.)?%{HTTP_HOST}/ [NC]
+	#    RewriteCond %{HTTP_REFERER} !^$
+	#    RewriteCond %{HTTP_REFERER} .
+	#    #RewriteRule .*.(jpe?g|gif|bmp|png)$ /images/nohotlink.jpg [L]
+	#    RewriteRule \.(png|jpe?g|gif|bmp)$ - [F]
+    </IfModule>
+</Directory>
+
+<Directory /srv/www/home/pracao.com.br/www/>
+   #--- Indices e opcoes
+    DirectoryIndex index.htm index.php
+    IndexIgnore */* 
+    Require all granted
+    Options +FollowSymLinks -Indexes
+    AllowOverride FileInfo AuthConfig Limit Indexes
+   #--- Php
+    <IfModule mod_php5.c>
+        AddType application/x-httpd-php .php
+        php_admin_flag  engine             "On"
+        php_admin_flag  display_errors     "On"
+        php_admin_value open_basedir       "/tmp:/usr/share/php:/srv/www/home/pracao.com.br"
+        php_admin_value user_dir            "/srv/www/home/pracao.com.br"
+        php_admin_value error_log          "/tmp/phperr.pracao"
+        #php_admin_flag register_globals     On
+    </IfModule>
+</Directory>
+
+#WordPress
+<Directory /srv/www/home/pracao.com.br/www/>
+    <Files ~ "^(wp-config|install)">
+    AuthType Basic
+    AuthName "Wordpress Setup"
+    AuthUserFile /srv/www/default/access/.htpasswd
+    # Require valid-user
+    Require user marca
+    #Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+    #Require host .localnet .google.com
+    #Require local
+    </Files>
+</Directory>
+
+
+
+

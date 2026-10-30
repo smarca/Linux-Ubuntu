@@ -1,0 +1,55 @@
+###########################################################################
+#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe ao autor sobre falhas ou incremento de funcoes           *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+# OPCOES: ALL, LOCAL, PARANOID
+
+#Localhost
+ALL: 127.0.0.0/255.0.0.0
+
+# Servico FTP
+in.proftpd: ALL : keepalive : linger 300
+
+# Servico Ident
+in.identd: ALL 
+auth : ALL
+pppd: ALL
+
+# Servico SMTP
+exim: ALL
+
+# Servico IMAP
+imapd: ALL
+
+# Servico POP
+spop3: ALL     
+ipop3d: ALL    
+pop-3: ALL     
+gnu-pop3d: ALL 
+vm-pop3d: ALL
+tpop3d: ALL
+pop3d: ALL
+imapd: ALL
+exim: ALL
+pptpd: ALL
+
+# Telnet Seguro (SSH)
+# sshd: .br, 10.0.0.0/255.0.0.0, 192.168.0.0/255.255.0.0, 172.16.0.0/255.240.0.0
+sshd: ALL
+in.telnetd: 10.0.0.1, 10.0.0.2
+
+#NFS
+rpc.mountd: 127.0.0.0/255.0.0.0, 10.0.0.0/255.0.0.0, 192.168.0.0/255.255.0.0, 172.16.0.0/255.240.0.0 
+portmap: 127.0.0.0/255.0.0.0, 10.0.0.0/255.0.0.0, 192.168.0.0/255.255.0.0, 172.16.0.0/255.240.0.0  
+mountd: 127.0.0.0/255.0.0.0, 10.0.0.0/255.0.0.0, 192.168.0.0/255.255.0.0, 172.16.0.0/255.240.0.0 
+nfsd: 127.0.0.0/255.0.0.0, 10.0.0.0/255.0.0.0, 192.168.0.0/255.255.0.0, 172.16.0.0/255.240.0.0 
+
+#Ntop
+ntop: 127.0.0.0/255.0.0.0, 10.0.0.0/255.0.0.0, 192.168.0.0/255.255.0.0, 172.16.0.0/255.240.0.0 
+
+#Mysql
+mysqld: 127.0.0.0/255.0.0.0, 10.0.0.1, 10.0.0.2
+

@@ -1,0 +1,8 @@
+#Nao efetua checagem de Headers de determinadas HOSTS
+
+*@passport.net
+*@folhadirigida.com.br
+*@weather.com
+*@mail.pr.gov.br
+*@passport.msn.com
+*@braslink.com

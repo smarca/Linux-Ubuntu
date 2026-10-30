@@ -1,0 +1,8 @@
+#Nao efetua checagem de Callout de determinadas HOSTS
+
+*@passport.net
+*@folhadirigida.com.br
+*@weather.com
+*@mail.pr.gov.br
+*@*.gov.br
+*@*.jus.br

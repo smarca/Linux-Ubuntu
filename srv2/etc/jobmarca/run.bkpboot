@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#Gerar novamente configuracao do Grub
+update-grub > /dev/null 2> /dev/null
+
+#Pegar informacoes 
+UID1=`blkid -s UUID -o value /dev/sda1`
+UID2=`blkid -s UUID -o value /dev/sdb1`
+UID3=`blkid -s UUID -o value /dev/sdc1`
+
+#Exibir informacoes para as particoes
+echo /boot/  $UID1
+echo /boot2/ $UID2
+echo /boot3/ $UID3
+
+#Syncronizar
+rsync -a -r -c --delete /boot/ /boot2/ ; sed -e s/$UID1/$UID2/g /boot/grub/grub.cfg > /boot2/grub/grub.cfg
+rsync -a -r -c --delete /boot/ /boot3/ ; sed -e s/$UID1/$UID3/g /boot/grub/grub.cfg > /boot3/grub/grub.cfg
+
+#Gerar por desencargo novamente
+update-grub
+
+#Listar pacotes do kernel
+aptitude search ~ilinux-headers ~ilinux-image
+

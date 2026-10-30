@@ -1,0 +1,10 @@
+# ^bounce-.*@.*
+# ^bounces-.*@.*
+# ^.*@bounce\..*
+# ^bounce@.*
+# ^bounces@.*
+^.*-errors@.*
+# ^postmaster@.*
+^mailer-daemon@.*
+^mailer_daemon@.*
+^daemon@.*

@@ -1,0 +1,91 @@
+#!/bin/bash
+
+###########################################################################
+#     Feito por Silmar A. Marca     smarca@gmail.com                      #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe ao autor sobre falhas ou incremento de funcoes           *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+
+LANG=pt_BR
+
+#Definir emails
+LOGNAME=marca@`hostname`.`dnsdomainname`
+EMAIL=marca@`hostname`.`dnsdomainname`
+REPLYTO=marca@`hostname`.`dnsdomainname`
+MAILTO=marca@`hostname`.`dnsdomainname`
+CopyTo="renatomsouto@gmail.com"
+export EMAIL REPLYTO MAILTO LOGNAME
+
+#-------------------------------------------------------------------------------
+#Dia de Reenvio Obrigatorio
+RMES=01
+
+#Pega variaveis
+HORA=`date +%H`                 # Hora  : de 00 a 23
+DSEM=`date +0%w`                # Semana: de 00 (Domingo), 01(Segunda) a 06 (Sabado)
+WMES=`echo $((((7+$(date +%d|sed 's/^0*//')))/7))` #Semana do mes de 1 a 5
+DIA=`date +%d`                  # Dia   : 01 ao numero de dias
+MES=`date +%m`                  # Mes   : de 01 a 12
+ANO=`date +%Y`                  # Ano   : 2011, 2012...
+
+#Reenvia mensagem mesmo se enviada anteriormente
+if [ $WMES -eq $RMES ]; then
+  rm -f /tmp/vrf_reboot
+fi 
+
+#/var/run/reboot-required.pkgs
+#cat /var/run/reboot-required
+#/etc/kernel/postinst.d/update-notifier
+#/usr/share/update-notifier/notify-reboot-required
+
+#Prepara reenvio de email, retornando a rodar normalmente
+if [ ! -f /var/run/reboot-required ]; then
+  rm -f /tmp/vrf_reboot
+fi
+
+#Sai se ja avisou
+if [ -f /tmp/vrf_reboot ]; then
+    exit
+fi
+
+#Verifica status. Para 2 raids tentar fazer um for..
+if [ -f /var/run/reboot-required ]; then
+  Subject="* +++ Reiniciar quando possivel o servidor `hostname` - ATUALIZACOES +++ *"
+  echo -e "
+     $Subject\n\n\
+       Algumas atualizacoes automaticas foram feitas no servidor `hostname -f`, ip `hostname -i`.
+       Favor, no proximo dia util e quando for possivel, favor reiniciar o servidor.
+   
+       `cat /var/run/reboot-required`
+
+       LEMBRAR DE RETIRAR TODOS OS SISTEMAS DO AR ANTES DE FAZER ESTE PROCEDIMENTO, EVITANDO CORRUPCAO DE ARQUIVOS DE DADOS 
+        1 - Nao tenha pressa, atualizacoes sempre sao feitas e de maneira rotineira. Se der para reiniciar o servidor apenas o mes que vem, tudo bem!
+        2 - Semestralmente no minimo, lembre se de efetuar as manutencoes de hardware, tais como:
+            * Passar ar internamente, incluindo limpeza manual de todos os ventiladores
+            * Antes de ligar, verificar mau contatos, conexoes de energia eletrica etc
+	    * Efetue manutencao preventiva tambem nos switches com ventiladores e em outros servidores se posivel
+	    * Teste sempre que possivel os nobreaks e o que aconteceria se:
+		a) Um dos links falharem (desligue por um tempo cada um e verifique na pratica isto)
+		b) Um dos servidores falharem (desligue por um tempo cada um e verifique na pratica isto. Os backus estao onde devem e funcionam?)
+		c) A energia eletrica falhar (seus nobreaks estao funcionando adequadamente?)
+	3 - O que nao eh urgente pode vir a ficar sem um plano de contingencia testado regularmente. Nossa tranquilidade depende de tais testes.
+
+	[SysInfo]
+	`landscape-sysinfo  | egrep -v '(landscape|Graph)'`
+
+	[UpTime]
+	`/usr/bin/uptime`
+
+	[Logins Ativos]
+	`/usr/bin/w`
+
+     " >> /tmp/vrf_reboot
+     #echo -e "-----------------------------------------------------------------------------------------" >> /tmp/vrf_reboot
+     #cat /proc/mdstat >> /tmp/vrf_reboot 2>> /tmp/vrf_reboot
+     #echo -e "-----------------------------------------------------------------------------------------" >> /tmp/vrf_reboot
+     touch /tmp/vrf_reboot
+  #Enviar mensagem contendo informacoes e anexos
+  cat /tmp/vrf_reboot | /usr/bin/mutt -s "$Subject" -c $CopyTo -- $MAILTO
+fi

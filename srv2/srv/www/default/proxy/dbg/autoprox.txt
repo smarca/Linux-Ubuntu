@@ -1,0 +1,5 @@
+autoprox -s
+autoprox http://www.microsoft.com
+autoprox http://www.microsoft.com http://proxy.a.localnet/wpad.dat
+autoprox -h http://www.microsoft.com http://proxy.a.localnet/wpad.dat
+

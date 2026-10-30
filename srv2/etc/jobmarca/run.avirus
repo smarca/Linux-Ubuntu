@@ -1,0 +1,71 @@
+#!/bin/bash
+#############################################################################
+# Feito por Silmar A. Marca 
+# smarca@gmail.com - extrair com tar -zxf --preserve backup.tar.gz 
+#############################################################################
+#cd / ;  find . -xdev | cpio -pm /srv/bkp
+LOGNAME=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+EMAIL=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+REPLYTO=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+MAILTO=alerta@`/bin/hostname`.`/bin/dnsdomainname`
+TMPDIR=/tmp
+MAILTO="smarca@gmail.com" ; copiaerr=alerta@`/bin/hostname`.`/bin/dnsdomainname` ; copiaerr2=root@`/bin/hostname`.`/bin/dnsdomainname`
+export EMAIL REPLYTO MAILTO LOGNAME TMPDIR
+
+#Diretorios
+DIRVIR=/tmp/virus 
+
+#Assunto Email
+Subject="WRN AntiVirus "`/bin/hostname`" - "`/bin/date +%Y-%b-%d" "%T" "\(%a\)`" $*".
+
+
+
+freshclam --quiet --no-warnings
+
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#LOG mover de volta!
+#cat log.txt | grep "moved to" |  gawk -F ":" $'{ print $2 " " "\'" $1 "\'" }' | sed 's/moved to/mv/g'
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+rm -f ${DIRVIR}/log.txt  
+havevir=0
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#OPT COMMON ? -z
+CMDAV="/usr/bin/nice --adjustment=18 /usr/bin/clamscan"
+COMMONOPT="-r --scan-swf=no --remove=no --infected --suppress-ok-results --max-filesize=16M --exclude-dir=virus" 
+COMMONPUA="--detect-pua=yes --exclude-pua=Win32.Packer --exclude-pua=Packed --exclude-pua=Spyware.XPCSpyPro --exclude-pua=OLE.EmbeddedPDF --exclude-pua=Script.PDF"
+EMAILSOPT="--detect-broken=yes --block-encrypted=no"
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# [Dir1] : --move=${DIRVIR}/mail
+mkdir -p ${DIRVIR}/mail
+echo "** Emails dos Usuarios ***" >> ${DIRVIR}/log.txt
+${CMDAV} ${COMMONOPT} ${EMAILSOPT} --move=${DIRVIR}/mail /srv/mail/`hostname -s` 2> /dev/null | tee -a ${DIRVIR}/mail/log.txt >> ${DIRVIR}/log.txt 
+ret="$?"
+if [ "$ret" -eq 0 -a "$havevir" -eq 0 ]; then
+    rm -f ${DIRVIR}/log.txt  
+else 
+    havevir=1   
+fi
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# [Dir2] 
+mkdir -p ${DIRVIR}/smb
+echo "** Arquivos de Rede ***" >> ${DIRVIR}/log.txt
+${CMDAV} ${COMMONOPT} --move=${DIRVIR}/smb /srv/smb/ 2> /dev/null | tee -a ${DIRVIR}/smb/log.txt >> ${DIRVIR}/log.txt 
+ret="$?"
+if [ "$ret" -eq 0 -a "$havevir" -eq 0 ]; then
+    rm -f ${DIRVIR}/log.txt  
+else 
+    havevir=1   
+fi
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# [Email em caso de erro]
+if [ -f "${DIRVIR}/log.txt" -a ! "$havevir" -eq 0 ]; then
+    mv -f ${DIRVIR}/log.txt ${DIRVIR}/logfull.txt ; grep -v "moved to" ${DIRVIR}/logfull.txt > ${DIRVIR}/log.txt
+    cat ${DIRVIR}/log.txt | /usr/bin/mutt -a ${DIRVIR}/log.txt -s "$Subject" -b $copiaerr -c $copiaerr2 -- $MAILTO
+fi
+

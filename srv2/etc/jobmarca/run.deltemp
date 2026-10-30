@@ -1,0 +1,13 @@
+#!/bin/bash
+
+tmp[0]="[$~]*.*"
+tmp[1]="*.[$~]*"
+tmp[2]="*.tmp"
+tmp[3]="thumbs.db"
+tmp[4]="thumb~i#.dbe"
+
+for itmp in ${tmp[@]}; do
+    find $* -type f -ctime +1 -mtime +1 -name "$itmp" -delete
+    # find $* -type f -ctime +1 -mtime +1 -name "$itmp" -print
+done
+

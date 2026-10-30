@@ -1,0 +1,18 @@
+# Site-specific additions and overrides for usr.sbin.dhcpd.
+# For more details, please see /etc/apparmor.d/local/README.
+
+# /etc/apparmor.d/usr.sbin.dhcpd
+# #include <local/usr.sbin.dhcpd>
+
+  capability dac_override,
+  capability kill,
+
+  #Named
+  /etc/bind/named.key r,
+
+  #Pid DHCP 1
+  /var/run/dhcp-server/dhcpd.pid rw,
+ 
+  #Pid DHCP generico
+  /{,var/}run/{,dhcp-server/}dhcpd{,6}.pid rw,
+

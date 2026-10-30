@@ -1,0 +1,148 @@
+Iptables:
+BE, EF, AFxx or CSx 
+
+Equivalcia Entre DSCP e ToS (Em Decimal)      
+   A configurao de QoS na maioria dos roteadores em decimal. Por isso, util se 
+   ter fil a tabela de equivalcia entre o modelo DiffServ e o Type of Service
+   (ToS).
+
+BE (Best Effort) - Melhor possivel..., mas nao garantido
+     
+EF (Expedited Forwarding) - Entrega Urgente
+RFC 2598 define o processo acelerado de Transmissao (EF) PHB: "O PHB EF podem ser usados ..
+ para construir uma baixa perda, baixa latcia, jitter baixos, largura de banda garantida, end-to-end atrav 
+ de servis DS (Diffserv) Tais domios servi aparece. para os pontos finais, como uma conex ponto-a-ponto ou uma 
+ "linha virtual alugadas." Este servi tamb tem sido descrito como um servi premium. 
+ "Codepoint 101110 recomendado para o PHB EF, o que corresponde a um valor DSCP de 46.
+
+     .-----------------------------.
+     | Binario  |   ToS   |  DSCP  |
+     |----------+---------+--------|
+     |  101110  |   184   |   46   |
+     '-----------------------------'
+     
++ AF (Assured Forwarding) - Entrega Garantida               + 
+Encaminhamento Assegurado
+ RFC 2597 define o encaminhamento assegurado (AF) PHB e descreve-o como um meio para um domio DS provedor oferecer 
+ diferentes niveis de garantias de encaminhamento para pacotes IP recebidos de um cliente de domio DS. 
+ O Assured Forwarding PHB garante uma certa quantidade de largura de banda para uma classe de AF e permite o acesso 
+ largura de banda extra, se disponel. Existem quatro classes AF, AF1x atraves AF4x. 
+ Dentro de cada classe, htr probabilidades de queda. Dependendo da polica de uma determinada rede, 
+ os pacotes podem ser selecionados para um PHB com base no rendimento exigido, delay, jitter, perda ou acordo com a 
+ prioridade de acesso aos servis de rede.
+
+ Classes 1-4 sao referidos como classes AF.
+  A tabela a seguir ilustra a codificao DSCP para especificar a classe AF com a probabilidade. 
+  Bits DS5, DS4 e DS3 definir a classe; perdas DS2 e DS1 especificar a probabilidade de queda; DS0 bit sempre zero.
+
+
+PPPDDD -> PPP: Prioridade na Entrega: quanto maior melhor - 111 urgente , 000 sem urgencia
+       -> DDD: Possibilidade de Drop: quanto menor melhor - 000 sem drop, 111 muitos drops 
+AFPD   -> P:   Possibilidade de Entrega (idem acima). 4 (mais urgente) ao 1 (menos urgente) 
+       -> D:   Possibilidade de Drop (idem acima). 1 (menos drop) ao 3 (mais drop)
+	>> Usar CS1 ao CS5 para servicos que nao serao dropados
+	>> Usar BE para servicos urgentes, mas com garantia quase que privilegiada... mas entrega somente se possivel
+        >> Usar CS6 e CS7 para servicos extremamente urgente
+  
+     .--------------------------------------------------------------------.  ^ 
+     |  Drop  | CS1 Class 1  | CS2 Class 2  | CS3 Class 3  | CS4 Class 4  |  | 
+     |--------+--------------+--------------+--------------+--------------|  | 
+     | Best Effort - BE - 101110					  |  | 
+     |--------+--------------+--------------+--------------+--------------|  | 
+     |        |    001010    |    010010    |    011010    |    100010    |  | 
+     |        |    AF11      |    AF21      |    AF31      |    AF41      |  | 
+     | Baixo  |    DSCP 10   |    DSCP 18   |    DSCP 26   |    DSCP 34   |  P 
+     |        |    ToS 40    |    ToS 72    |    ToS 104   |    ToS 136   |  r -
+     |        |              |              |              |  (mais prio) |  i  
+     |--------+--------------+--------------+--------------+--------------|  o D
+     |        |    001100    |    010100    |    011100    |    100100    |  r r
+     |        |    AF12      |    AF22      |    AF32      |    AF42      |  i o
+     | Medio  |    DSCP 12   |    DSCP 20   |    DSCP 28   |    DSCP 36   |  d p
+     |        |    ToS 48    |    ToS 80    |    ToS 112   |    ToS 144   |  a 
+     |        |              |              |              |              |  d 
+     |--------+--------------+--------------+--------------+--------------|  e +
+     |        |    001110    |    010110    |    011110    |    100110    |  | 
+     |        |    AF13      |    AF23      |    AF33      |    AF43      |  |  
+     | Alto   |    DSCP 14   |    DSCP 22   |    DSCP 30   |    DSCP 38   |  | 
+     |        |    ToS 56    |    ToS 88    |    ToS 120   |    ToS 152   |  | 
+     |        | (menos prio) |              |              |              |  | 
+     '--------------------------------------------------------------------'  |    
+     | Default - EF - 000000						  |  | 
+     '--------------------------------------------------------------------'    
+     -  |----------------------P-r-i-o-r-i-d-a-d-e----------------------->   
+                        -   Urgencia na entrega   +
+
+      No caso das classes de Entrega Garantida (AF), sabendo-se a classe e 
+      subclasse na forma seguinte:
+                                    AFxy 
+                                    Onde:
+                                         x - Classe
+                                         y - Subclasse
+      
+      Fica fil obter o DSCP e o ToS na fmula abaixo:
+      DSCP = 2.(4.x+y)
+      ToS  = 4.DSCP = 8.(4.x+y)
+      
+            Classificao de Servicos
+     .-------------------------------------.
+     |        | Binario  |  ToS   |  DSCP  |
+     |--------+----------+--------+--------|
+     |  CS0   |  000000  |    0   |    0   |
+     |--------+----------+--------+--------|
+     |  CS1   |  001000  |   32   |    8   |
+     |--------+----------+--------+--------|
+     |  CS2   |  010000  |   64   |   16   |
+     |--------+----------+--------+--------|
+     |  CS3   |  011000  |   96   |   24   |
+     |--------+----------+--------+--------|
+     |  CS4   |  100000  |  128   |   32   |
+     |--------+----------+--------+--------|
+     |  CS5   |  101000  |  160   |   40   |
+     |--------+----------+--------+--------|
+     |  CS6   |  110000  |  192   |   48   |
+     |--------+----------+--------+--------|
+     |  CS7   |  111000  |  224   |   56   |
+     '-------------------------------------'
+
+PPPDDD -> PPP: Prioridade na Entrega: quanto maior melhor - 111 urgente , 000 sem urgencia
+       -> DDD: Possibilidade de Drop: quanto menor melhor - 000 sem drop, 111 muitos drops 
+AFPD   -> P:   Possibilidade de Entrega (idem acima). 4 (mais urgente) ao 1 (menos urgente) 
+       -> D:   Possibilidade de Drop (idem acima). 1 (menos drop) ao 3 (mais drop)
+	>> Usar CS1 ao CS5 para servicos que nao serao dropados
+	>> Usar BE para servicos urgentes, mas com garantia quase que privilegiada... mas entrega somente se possivel
+        >> Usar CS6 e CS7 para servicos extremamente urgente
+
+Valores 
+DSCP    Binary Decimal 
+EF      000000   0 
+CS1     001000   8 
+AF11    001010  10 
+AF12    001100  12 
+AF13    001110  14 
+CS2     010000  16 
+AF21    010010  18 
+AF22    010100  20 
+AF23    010110  22 
+CS3     011000  24 
+AF31    011010  26 
+AF32    011100  28 
+AF33    011110  30 
+CS4     100000  32 
+AF41    100010  34 
+AF42    100100  36 
+AF43    100110  38 
+CS5     101000  40 
+BE      101110  46 
+CS6     110000  48 
+CS7     111000  56 
+
+
+Valores recomendados mostrados acima e tamb incluos nos arquivos de configurao como exemplos:
+Tipo           Tos     Cos
+-----------------------------
+Sinalizacao    cs3     3
+Audio          ef      5
+Video          af41    4
+Texto          af41    3
+Outros         ef
+

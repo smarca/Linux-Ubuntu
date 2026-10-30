@@ -1,0 +1,12 @@
+# Obriga varificacao de SPF, caso o dominio informe dados a respeito
+
+*@hotmail.com		Try to use the original Hotmail Site
+*@facebookmail.com	Try to use the original Facebook Site
+*@facebook.com		Try to use the original Facebook Site
+*@gmail.com		Try to use the original Gmail or Google Site
+*@microsoft.com    	Try to send using Microsoft servers
+*@windowslive.com	Try to send using Windows Live Site
+*@*.windowslive.com     Try to send using Windows Live Site
+*@yahoo.com		Try to use the original Yahoo Site
+\N^.*@.*mail.*$\N	Try to use the Webmail Interface of this domain
+

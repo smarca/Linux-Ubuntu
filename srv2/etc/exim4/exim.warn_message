@@ -1,0 +1,28 @@
+Subject: Aguardando $warn_message_delay: $h_subject 
+In-Reply-To: $h_message-id
+References: $h_message-id
+X-No-Archive: yes
+****
+Esta mensagem foi criada automaticamente pelo software de entrega de correio.
+
+Uma mensagem ${if eq{$sender_address}{$warn_message_recipients}{que foi enviada }{enviada por
+
+  <$sender_address>
+
+}}ainda nao pode ser entregue a todos seus destinatarios. 
+
+Durante $warn_message_delay o servidor de entrega de emails $primary_hostname 
+efetuou varias tentativas.
+
+- Assunto da mensagem:        $h_subject
+- Data de envio da mensagem:  $h_date 
+- Tempo tentando enviar:      $warn_message_delay
+- Identicacao da mensagem:    $message_exim_id
+
+Um ou mais enderecos falharam:
+****
+Nenhuma acao e requerida de sua parte. As tentativas de entrega continuarao
+a serem feitas. Este aviso podera se repetir por varias vezes enquanto a 
+mesma mensagem nao for entregue a todos destinatarios. Caso esta mensagem, 
+mesmo apos varias tentativas, nao puder ser entregue a quaisquer um dos seus
+destinatarios um ultimo erro sera retornado alertando a falha.

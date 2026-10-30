@@ -1,0 +1,22 @@
+#Rotas para redes remotas 
+
+#-Exemplos Genericos
+# grupogsn.com.br		grupogsn.com.br/MX 	randomize bydns
+# bourbon.com.br 	   	smtp.bourbon.com.br	randomize bydns
+
+#-Servidor 2
+*@srv1.metropol.com.br			10.0.0.1
+*@srv1.monital.com.br			10.0.0.1
+# *@metropol.com.br			10.0.0.2
+# *@monital.com.br			10.0.0.2
+# *@metropol-alarmes.com.br		10.0.0.2
+# *@monitrace.com.br			10.0.0.2
+
+#Servidor 1
+#*@srv2.metropol.com.br                  10.0.0.2
+#*@srv2.monital.com.br                   10.0.0.2
+
+# smarca@gmail.com			 smtplw.com.br::587
+
+ 
+

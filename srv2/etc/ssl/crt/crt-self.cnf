@@ -1,0 +1,93 @@
+HOME                    = /etc/ssl
+RANDFILE                = /dev/urandom
+
+####################################################################
+[ ca ]
+default_ca       = CA_default
+
+[ CA_default ]
+unique_subject 	 = no
+dir              = /etc/ssl/crt
+database         = $dir/db/index
+serial           = $dir/db/serial
+RANDFILE         = /dev/urandom
+default_days     = 1825
+default_crl_days = 30
+default_md       = default
+preserve         = no
+policy           = policy_anything
+name_opt         = ca_default
+cert_opt         = ca_default
+x509_extensions  = user_cert
+req_extensions   = user_cert
+
+[ policy_anything ]
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+default_bits            = 4096
+default_md              = sha1
+distinguished_name      = server_req
+string_mask             = nombstr
+x509_extensions  	= server_ca
+#prompt             	= no
+#encrypt_key        	= no
+
+#Passwords for private keys: openssl rand -base64 64
+# input_password = L8K4+dsl8ip+hW11dPqwQm5+yuDWnxbVbc2e/il0KLurJVN4n0XsTO/JSHxAULUb
+# output_password = L8K4+dsl8ip+hW11dPqwQm5+yuDWnxbVbc2e/il0KLurJVN4n0XsTO/JSHxAULUb
+
+[ v3_altnames_req ]
+DNS.1 = *.monital.com.br
+DNS.2 = *.metropol.com.br
+DNS.3 = *.monital.net.br
+#IP.1 = 177.220.156.178
+#IP.2 = 177.220.156.179
+
+[ usr_altnames_cert ]
+email.1 = copy
+# URI.1 = http://my.url.here/
+# email.2 = outroemail@dominio.com.br
+
+[ server_req ]
+0.organizationName              = Nome da Organizacao (ex: compahia)
+0.organizationName_default      = Monital
+organizationalUnitName          = Local da Organizacao (ex: area)
+organizationalUnitName_default  = Area Criptografada
+commonName                      = Nome comum (ex: *.dominio.com, usuario )
+commonName_default              = *.monital.com.br
+commonName_max                  = 64
+emailAddress                    = Endereco de Email (opcional. ex: usuario@dominio.com)
+emailAddress_default            = 
+emailAddress_max                = 64
+
+[ server_ca ]
+subjectKeyIdentifier	= hash
+authorityKeyIdentifier	= keyid:always,issuer:always
+basicConstraints        = critical,CA:true
+nsCertType              = sslCA
+keyUsage                = cRLSign, keyCertSign
+nsComment               = "Certificado CA"
+
+[ server_cert ]
+authorityKeyIdentifier  = keyid,issuer
+subjectKeyIdentifier	= hash
+basicConstraints 	= CA:false
+keyUsage         	= digitalSignature, keyEncipherment
+subjectAltName 		= @v3_altnames_req
+nsComment               = "Certificado Servidor"
+extendedKeyUsage        = serverAuth					
+nsCertType              = server
+
+[ user_cert ]
+authorityKeyIdentifier	= keyid,issuer
+# subjectKeyIdentifier	= hash
+basicConstraints        = CA:false
+nsComment               = "Certificado Usuario"
+keyUsage                = digitalSignature, keyEncipherment		#nonRepudiation
+extendedKeyUsage        = clientAuth, serverAuth			#emailProtection, timeStamping, codeSigning
+nsCertType              = client
+issuerAltName		= issuer:copy

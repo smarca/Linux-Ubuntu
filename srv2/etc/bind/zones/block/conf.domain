@@ -1,0 +1,33 @@
+#zone "gwea.com" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "baidu.com" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "sohu.com" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "websearches.com"		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "bigmoney.biz" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "sinip.es" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "tools1000.com"            { type master; file "/etc/bind/zones/block/dummy-block"; };
+#
+##Adobe Active
+#zone "activate.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "3dns-3.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "adobe-dns.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "adobe-dns-2.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "adobe-dns-3.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "ereg.wip3.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "activate-sea.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "wip3.adobe.com" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "wwis-dubc1-vip60.adobe.com" { type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "activate-sjc0.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "practivate.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "ereg.adobe.com" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "activate.wip3.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "3dns-2.adobe.com" 	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#
+##IPCamera
+#zone "aipcam.com" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#
+##Redes teredo
+#zone "ipv6.microsoft.com"   	{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "remlab.net" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "consulintel.com" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+#zone "ngix.ne.kr" 		{ type master; file "/etc/bind/zones/block/dummy-block"; };
+

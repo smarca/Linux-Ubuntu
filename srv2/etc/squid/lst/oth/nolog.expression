@@ -1,0 +1,4 @@
+#\.(cab)(\?.*)?$
+
+#TeamViewer
+d(in|out)[.]aspx[?]

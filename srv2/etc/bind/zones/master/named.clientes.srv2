@@ -1,0 +1,55 @@
+$TTL	1D
+;###########################################################################
+;#     Feito por Silmar A. Marca      smarca@gmail.com                #
+;#     http://www.grupogsn.com.br/  suporte@grupogsn.com.br                #
+;###########################################################################
+;#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+;#  *  Informe ao autor sobre falhas ou incremento de funcoes            *  #
+;#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+;###########################################################################
+@       IN SOA srv2.metropol.com.br. suporte.metropol.com.br. (
+                2014070502 ; serial
+                3H  ; refresh
+                15M ; retry
+                6D  ; expire
+                2H  ; Negative Cache TTL
+        )
+                        IN      A       177.220.156.179
+                        IN      NS      srv1.metropol.com.br.
+                        IN      NS      srv2.metropol.com.br.
+                        IN      MX      0       srv2.metropol.com.br.
+                        IN      TXT     "v=spf1 mx a:srv2.metropol.com.br a:srv1.metropol.com.br -all"
+                        IN      RP      Marca. suporte.metropol.com.br.
+                        IN      SPF     "v=spf1 mx a:srv2.metropol.com.br a:srv1.metropol.com.br -all"
+$ORIGIN @
+
+
+;----------------------------------------------------------------------------
+$TTL    1D
+localhost               IN      A       127.0.0.1
+
+$TTL    6H
+;# Servidores de Mail
+mail                    IN      A       177.220.156.179
+                        IN      MX      0       mail
+                        IN      TXT     "v=spf1 mx a:srv1.metropol.com.br a:srv2.metropol.com.br -all"
+                        IN      RP      Marca. suporte.metropol.com.br.
+                        IN      SPF     "v=spf1 mx a:srv1.metropol.com.br a:srv2.metropol.com.br -all"
+
+;# Maquinas apelido pra servidor principal
+www			IN	CNAME	@
+painel			IN	CNAME	srv2
+stat			IN	CNAME	srv2
+ftp			IN	CNAME	srv2
+smtp			IN	CNAME	srv2
+pop3			IN	CNAME	srv2
+imap			IN	CNAME 	srv2
+pop			IN	CNAME	srv2
+ldap			IN	CNAME	@
+home			IN	CNAME	@
+web			IN	CNAME	@
+webmail			IN	CNAME	srv2
+webmail2		IN	CNAME	srv2
+ntp			IN	CNAME	@
+time			IN	CNAME 	@
+bd 			IN	CNAME 	srv2

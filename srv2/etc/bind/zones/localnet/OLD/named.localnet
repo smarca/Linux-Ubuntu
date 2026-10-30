@@ -1,0 +1,44 @@
+$TTL 86400	; 1 day
+@       IN SOA  @ suporte (
+                        1          ; serial
+                        15m        ; refresh
+                        5m         ; retry
+                        1D         ; expire
+                        15m        ; minimum
+                )
+        NS                      @
+        TXT                     "ZonaLocal"
+        A                       127.0.0.1
+
+$ORIGIN localnet.
+A                       A       10.0.0.1
+			A	10.0.0.2
+B                       A       172.16.0.1
+			A	172.16.0.2
+C                       A       192.168.0.1
+			A       192.168.0.2
+
+$ORIGIN A.localnet.
+srv			A	10.0.0.1
+			A       10.0.0.2
+srv1			A	10.0.0.1
+srv2			A	10.0.0.2
+proxy                   IN      CNAME   srv
+wpad                    IN      CNAME   srv
+
+$ORIGIN B.localnet.
+srv			A	172.16.0.1
+			A       172.16.0.2
+srv1			A	172.16.0.1
+srv2			A	172.16.0.2
+proxy                   IN      CNAME   srv
+wpad                    IN      CNAME   srv
+
+$ORIGIN C.localnet.
+srv			A	192.168.0.1
+			A       192.168.0.2
+srv1			A	192.168.0.1
+srv2			A	192.168.0.2
+proxy                   IN      CNAME   srv
+wpad                    IN      CNAME   srv
+

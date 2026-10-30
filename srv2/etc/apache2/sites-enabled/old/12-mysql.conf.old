@@ -1,0 +1,30 @@
+#http://httpd.apache.org/docs/current/mod/mod_authn_dbd.html
+### mod_dbd configuration
+## UPDATED to include authentication cacheing
+#DBDriver pgsql
+#DBDParams "dbname=apacheauth user=apache password=xxxxxx"
+#
+#DBDMin  4
+#DBDKeep 8
+#DBDMax  20
+#DBDExptime 300
+#
+#<Directory /usr/www/myhost/private>
+#  # mod_authn_core and mod_auth_basic configuration
+#  # for mod_authn_dbd
+#  AuthType Basic
+#  AuthName "My Server"
+#
+#  # To cache credentials, put socache ahead of dbd here
+#  AuthBasicProvider socache dbd
+#
+#  # Also required for caching: tell the cache to cache dbd lookups!
+#  AuthnCacheProvideFor dbd
+#  AuthnCacheContext my-server
+#
+#  # mod_authz_core configuration
+#  Require valid-user
+#
+#  # mod_authn_dbd SQL query to authenticate a user
+#  AuthDBDUserPWQuery "SELECT password FROM authn WHERE user = %s"
+#</Directory>

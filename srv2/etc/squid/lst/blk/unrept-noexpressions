@@ -1,0 +1,31 @@
+#!/bin/bash
+#http://www.squidguard.org/blacklists.html
+#http://urlblacklist.com/?sec=download
+
+#Converter arquivos
+unix2dos $1/* 2> /dev/null
+dos2unix $1/* 2> /dev/null
+
+if [ -f $1/domains.fix ]; then
+    cat $1/domains.fix >> $1/domains
+fi
+
+if [ -f $1/domains ]; then
+    cat $1/domains | sed 's/^www//' > $1/domains.new        ; mv -f $1/domains.new $1/domains
+    # Colocar Pontos onde Falta no dominio, retirar www
+    cat $1/domains | gawk -F " " '{ 
+	if ((substr($1,1,1) == ".") || (substr($1,1,1) == "#") || (substr($1,1,1) == " ")) print $1; 
+	else		           print "."$1;
+        fi
+    }' | sort | uniq    > $1/domains.new	; mv -f $1/domains.new $1/domains
+fi
+
+ #Filtra palavras repetidas
+ for exp in `cat $1/domains`; do
+   nexp=`cat $1/domains | grep "$exp" | wc -l`
+   if [ $nexp -gt 1  ]; then
+     cat $1/domains | egrep -v "$exp"  > $1/domains.new
+     echo $exp >> $1/domains.new
+     mv -f $1/domains.new $1/domains
+   fi
+ done

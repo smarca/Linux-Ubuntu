@@ -1,0 +1,70 @@
+#----Exemplo simples
+#Liberar o ssh por 120 segundos para quem estiver na lista SSHOK
+iptables -A INPUT -p tcp --dport 22 -m recent --rcheck -name SSHOK --seconds 120 -j ACCEPT
+
+#Adicionar na lista SSHOK quem bater na porta 12345
+iptables -A INPUT -p tcp --dport 12345 -m recent --set --name SSHOK
+#-----------------
+
+####################################################################
+http://www.vivaolinux.com.br/dica/Port-knocking-para-SSH-rapido-e-facil-com-iptables
+
+ ----------------
+ ####### A rede que vocêquer que tenha acesso ao segredo (aqui no caso
+ estápara qualquer uma)
+
+ HOST_IP="0.0.0.0/0.0.0.0"
+
+ ####### Fases do Segredo ##################################
+ /sbin/iptables -N INTO-FASE2
+ /sbin/iptables -A INTO-FASE2 -m recent --name FASE1 --remove
+ /sbin/iptables -A INTO-FASE2 -m recent --name FASE2 --set
+ /sbin/iptables -A INTO-FASE2 -j LOG --log-prefix "INTO FASE2: "
+
+ /sbin/iptables -N INTO-FASE3
+ /sbin/iptables -A INTO-FASE3 -m recent --name FASE2 --remove
+ /sbin/iptables -A INTO-FASE3 -m recent --name FASE3 --set
+ /sbin/iptables -A INTO-FASE3 -j LOG --log-prefix "INTO FASE3: "
+
+ /sbin/iptables -N INTO-FASE4
+ /sbin/iptables -A INTO-FASE4 -m recent --name FASE3 --remove
+ /sbin/iptables -A INTO-FASE4 -m recent --name FASE4 --set
+ /sbin/iptables -A INTO-FASE4 -j LOG --log-prefix "INTO FASE4: "
+
+ /sbin/iptables -A INPUT -m recent --update --name FASE1
+
+ ####### Aqui vocêdetermina o núero das portas e o tempo que o ip
+ ficaráem cada uma das fazes aguardando a próima porta ser digitada.
+ Por ex.: Vocêterá15 segundos para passar de cada fase, se o tempo se
+ expirar na fase 3 teráque começr da fase1 novamente. ###########
+ ####### Dica: nã éaconselháel utilizar portas em sequêcias
+ crescentes ou decrescentes como neste exemplo (100, 200, 300, 400) e
+ sim intercalando os valores uma mais alta e uma mais baixa para evitar
+ que algum scan consiga adivinhar a sequêcia. #######
+
+ /sbin/iptables -A INPUT -p tcp --dport 100 -m recent --set --name FASE1
+ /sbin/iptables -A INPUT -p tcp --dport 200 -m recent --rcheck
+ --seconds 15 --name FASE1 -j INTO-FASE2
+ /sbin/iptables -A INPUT -p tcp --dport 300 -m recent --rcheck
+ --seconds 15 --name FASE2 -j INTO-FASE3
+ /sbin/iptables -A INPUT -p tcp --dport 400 -m recent --rcheck
+ --seconds 15 --name FASE3 -j INTO-FASE4
+
+ ####### Aqui chegamos a FASE4, que éa útima deste exemplo, onde seráliberada a conexã com a porta 22 (ssh). O tempo aqui estásetado para
+ 3600 segundos (1 hora). Depois disso seráfechada novamente para o ip
+ em questã, lembrando que se ele ainda estiver logado nã farádiferenç, seráfechada mesmo assim. Entã aumente o tempo conforme
+ desejado.####
+
+ /sbin/iptables -A INPUT -p tcp -s $HOST_IP --dport 22 -m recent
+ --rcheck --seconds 3600 --name FASE4 -j ACCEPT
+
+ ####### Por útimo fechamos todos acessos a porta 22 ########
+
+ /sbin/iptables -A INPUT -p tcp --dport 22 -j DROP
+
+ $ telnet IP_SERVIDOR 100
+ $ telnet IP_SERVIDOR 200
+ $ telnet IP_SERVIDOR 300
+ $ telnet IP_SERVIDOR 400
+
+ e agora ésóentrar com ssh normalmente

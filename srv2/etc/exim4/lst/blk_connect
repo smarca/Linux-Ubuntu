@@ -1,0 +1,18 @@
+#Nega conexoes vindas de determinados hosts
+
+211/8			Rede SPAMMER
+221/8			Rede SPAMMER
+195.242.214.0/24	Rede SPAMMER
+201.7.94.0/24           Rede SPAMMER
+201.14.50.76		IP SPAMMER
+201.6.102.215		IP SPAMMER
+200.152.208.194         IP SPAMMER
+210.245.151.32 		IP SPAMMER
+205.210.42.52		IP Mala Direta
+200.102.4.250		IP SPAMMER Bomb
+202.158.68.90		IP SPAMMER
+84.145.119.250 		IP SPAMMER
+63.223.79.0/24		Envio de Virus
+63.223.78.0/24		Envio de Virus
+187.51.19.0/24		Envio de Propagandas
+#mail.rw1srv.com	Excesso de Bounces sem Assinatura

@@ -1,0 +1,328 @@
+###########################################################################
+#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe ao autor sobre falhas ou incremento de funcoes           *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+#Ver capacidades em "proftpd -l"
+
+# Includes DSO modules
+Include /etc/proftpd/modules.conf
+
+
+#-[Servidor]-----------------------------------------------------------------------------------------------
+Port				21
+ServerName			"Monital"
+ServerType 			inetd
+DefaultServer			on
+ServerAdmin			suporte
+UseReverseDNS 			on
+MaxInstances 			30
+WtmpLog 			on
+LogFormat  			default "%h %l %u %t \"%r\" %s %b"
+LogFormat  			auth    "%v [%P] %h %t \"%r\" %s"
+LogFormat  			write   "%h %l %u %t \"%r\" %s %b"
+MultilineRFC2228 		on
+PassivePorts 			49152 65534
+ServerIdent                     on      "Servidor de Ftp Monital Alarmes"
+UseIPv6                     off
+TransferLog /var/log/proftpd/xferlog
+SystemLog   /var/log/proftpd/proftpd.log
+#ExtendedLog /var/log/proftpd.access WRITE,READ write
+#ExtendedLog /var/log/proftpd.auth AUTH auth
+#ExtendedLog /var/log/proftpd.all ALL default
+
+
+# Uncomment this if you are using NIS or LDAP via NSS to retrieve passwords:
+# PersistentPasswd              off
+
+# This is required to use both PAM-based authentication and local passwords
+# AuthOrder                     mod_auth_pam.c* mod_auth_unix.c
+
+# Delay engine reduces impact of the so-called Timing Attack described in
+# http://www.securityfocus.com/bid/11430/discuss
+# It is on by default..
+
+<IfModule mod_delay.c>
+DelayEngine on
+</IfModule>
+
+<IfModule mod_ctrls.c>
+ControlsEngine        off
+ControlsMaxClients    2
+ControlsLog           /var/log/proftpd/controls.log
+ControlsInterval      5
+ControlsSocket        /var/run/proftpd/proftpd.sock
+</IfModule>
+
+<IfModule mod_ctrls_admin.c>
+AdminControlsEngine off
+</IfModule>
+
+# Alternative authentication frameworks
+#Include /etc/proftpd/ldap.conf
+#Include /etc/proftpd/sql.conf
+
+# This is used for FTPS connections
+#Include /etc/proftpd/tls.conf
+
+# Useful to keep VirtualHost/VirtualRoot directives separated
+#Include /etc/proftpd/virtuals.con
+
+#Incluir outros
+#Include /etc/proftpd/conf.d/
+#-[Globais]-----------------------------------------------------------------------------------------------
+<Global>
+    <IfModule mod_quotatab.c>
+    QuotaEngine off
+    # QuotaType 			soft|hard
+    </IfModule>
+
+    <IfModule mod_ratio.c>
+    Ratios off
+    </IfModule>
+    ShowSymlinks                on
+    ListOptions                 "-l"
+    TimesGMT			off
+    
+    IdentLookups 		off
+    DefaultTransferMode 	binary
+    
+    RootLogin 			off
+    LoginPasswordPrompt 	on
+    RequireValidShell 		on
+    UseLastlog 			on
+    
+    #RLimitCPU, RLimitMemory, RLimitOpenFiles
+
+    User                            proftpd
+    Group                           nogroup
+    #AuthOrder mod_pam.c mod_mysql.c (proftpd -l)
+
+    AllowOverwrite		on
+    AllowRetrieveRestart 	on
+    AllowStoreRestart 		on
+    DeleteAbortedStores 	on
+
+    DeferWelcome		on
+    DisplayConnect    		/etc/proftpd/proftpd.login
+    DisplayReadme               README
+    DisplayLogin                /etc/proftpd/proftpd.welcome
+    DisplayQuit                 /etc/proftpd/proftpd.logout
+
+    SetEnv TZ :/etc/localtime
+
+    UseFtpUsers 		on
+    CDPath    			~/public_html
+    #PathDenyFilter 		"(\\.ftpaccess)|(\\.htaccess)|(\\.htpasswd)$"
+    #DenyFilter                 \*.*/
+
+    #LeechRatioMsg 		" "
+    AccessDenyMsg		"Login negado para o usuario %u."
+    AccessGrantMsg		"Login efetuado com sucesso ao usuario %u."
+    Umask			136 026
+
+    DefaultRoot 		~ !marca
+
+    TimeoutStalled 		150
+    TimeoutNoTransfer 		600
+    TimeoutIdle 		1200
+    TimeoutLogin         	120
+    MaxLoginAttempts            3
+    MaxClients			50 "Desculpe, o número máximo de conexões simultâneas já foi atingido (%m). Tente mais tarde."
+    MaxClientsPerHost		 5 "Você já está com muitas conexões simultâneas deste host (%m)."
+    MaxClientsPerUser		 5 "Você já está com muitas conexões simultâneas deste usuario (%m)."
+    MaxHostsPerUser		 3 "Você já está com muitas conexões de diferentes hosts (%m) deste usuario."
+
+    MaxRetrieveFileSize		 1 Gb
+    MaxStoreFileSize 		 1 Gb
+
+</Global>
+
+#-[Login]-----------------------------------------------------------------------------------------------
+<Limit LOGIN>
+    Order 			Allow,Deny
+    Allow from 			186., 187., 189., 191., 200., 201., 143., 10., 172.16., 192.168., 127.0.0., 143., 177. 179. 
+    Deny from 			all
+</Limit>
+
+#-[Directory]-----------------------------------------------------------------------------------------------
+
+<Directory /*>
+    AllowOverwrite          	on
+    HideNoAccess                on
+    <Limit WRITE>
+    	DenyAll
+    </Limit>
+</Directory>
+
+<Directory /home/*>
+    <Limit WRITE>
+    	AllowAll
+    </Limit>
+</Directory>
+
+<Directory /srv/smb/bkup/Suporte/*>
+    <Limit WRITE>
+    	AllowAll
+    </Limit>
+</Directory>
+
+<Directory ~/Maildir>
+    <Limit WRITE>
+    	DenyAll
+    </Limit>
+</Directory>
+
+<Directory /srv/www/*>
+    Umask               136 026
+    <Limit WRITE>
+    	AllowAll
+    </Limit>
+</Directory>
+
+<Directory /srv/smb/mult/*>
+    <Limit WRITE>
+    	AllowAll
+    </Limit>
+    AllowStoreRestart 	off
+    Umask		111 000
+    DirFakeGroup 	On ftp
+    DirFakeUser		On ftp
+    GroupOwner		nogroup
+</Directory>
+
+#<Directory /srv/ftp/incoming/*>
+#    AllowOverwrite   on
+#    <Limit STOR CMD MKD WRITE>
+#     AllowALL
+#    </Limit>
+#    <Limit RETR DELE>
+#     DenyALL
+#    </Limit>
+#</Directory>
+
+#<Anonymous /srv/ftp>
+#  User 				ftp
+#  Group 			www
+#  RequireValidShell 		off
+#  UserAlias 			anonymous ftp
+#  MaxClients 			10
+#  DisplayFirstChdir             INFO
+#  DisplayReadme                 README
+#  DisplayLogin                  WELCOME
+#  <Limit WRITE>
+#     DenyALL
+#  </Limit>
+#  <Limit LOGIN>
+#    Order 			Allow,Deny
+#    Allow from 			187., 189., 200., 201., 143., 10., 172.16., 192.168., 127.0.0.
+#    Deny from 			all
+#  </Limit>
+#  DirFakeUser                  	on
+#  DirFakeGroup                 	on
+#  MaxClientsPerHost            	5 "Permitida maximo de cinco conexões por IP!"
+#  HideNoAccess                  on
+#
+#  #TransferRate 		16384  class internet
+#</Anonymous>
+# <Anonymous ~ftp>
+#   User                                ftp
+#   Group                               nogroup
+#   # We want clients to be able to login with "anonymous" as well as "ftp"
+#   UserAlias                   anonymous ftp
+#   # Cosmetic changes, all files belongs to ftp user
+#   DirFakeUser on ftp
+#   DirFakeGroup on ftp
+#.
+#   RequireValidShell           off
+#.
+#   # Limit the maximum number of anonymous logins
+#   MaxClients                  10
+#.
+#   # We want 'welcome.msg' displayed at login, and '.message' displayed
+#   # in each newly chdired directory.
+#   DisplayLogin                        welcome.msg
+#   DisplayChdir                .message
+#.
+#   # Limit WRITE everywhere in the anonymous chroot
+#   <Directory *>
+#     <Limit WRITE>
+#       DenyAll
+#     </Limit>
+#   </Directory>
+#.
+#   # Uncomment this if you're brave.
+#   # <Directory incoming>
+#   #   # Umask 022 is a good standard umask to prevent new files and dirs
+#   #   # (second parm) from being group and world writable.
+#   #   Umask                           022  022
+#   #            <Limit READ WRITE>
+#   #            DenyAll
+#   #            </Limit>
+#   #            <Limit STOR>
+#   #            AllowAll
+#   #            </Limit>
+#   # </Directory>
+#.
+# </Anonymous>
+
+#Classes on
+#Class default           	limit 20
+#Class localnet          	limit 30
+#Class localnet          	ip 127.0.0.0/8
+#Class localnet          	ip 10.0.0.0/8 
+#Class localnet          	ip 172.16.0.0/12 
+#Class localnet          	ip 192.168.0.0/16 
+#Class internet          	limit 10
+#Class internet          	ip 0.0.0.0/0
+
+#-------------------------------------------------------------------------------------------------------------------
+#http://www.linuxrapido.org/modules.php?name=Sections&op=viewarticle&artid=93
+#TLSCACertificateFile, TLSDHParamFile, TLSDSACertificateFile, TLSDSACertificateKeyFile, TLSRSACertificateFile, TLSRSACertificateKeyFile, TLSRequired
+<IfModule mod_tls.c>
+      TLSEngine on
+      # TLSRequired on
+      TLSLog /var/log/proftpd/xferlog.tls
+      TLSProtocol SSLv23 
+      TLSRSACertificateFile     /etc/ssl/crt/server/monital.crt
+      TLSRSACertificateKeyFile  /etc/ssl/crt/server/monital.rsa.key
+      TLSDHParamFile		/etc/ssl/crt/server/monital.dh
+      TLSVerifyClient on
+</IfModule>
+#-------------------------------------------------------------------------------------------------------------------
+# http://www.lastditcheffort.org/~aah/proftpd/mod_sql/src/README.mod_sql-4.0
+#<IfModule mod_sql_mysql.c>
+#		  
+#SQLConnectInfo           	maildb@localhost virtualmailmgr virtualmailpass
+#SQLAuthTypes 		 	Crypt Backend Plaintext
+#SQLHomedirOnDemand	 	on
+#SQLAuthenticate          	users groups
+#SQLMinUserUID            	8
+#SQLMinUserGID           	12
+#SQLUserInfo              	domain domain_name password_hash uid gid homewww "'/bin/logdeny'"
+#SQLNamedQuery 		 	updtime UPDATE "timeftp=now() WHERE domain_name='%u'" domain
+#SQLNamedQuery 		 	gettime SELECT "timeftp from domain where domain_name='%u'" 
+#SQLLog 			 	PASS updtime 
+#
+#SQLUserWhereClause   	 	ativo = '1' and homewww <> ''"
+##SQLUserWhereClause  		"disabled=0 and (expiration >= NOW() OR expiration='0000-00-00 00:00:00')"
+#
+#SQLGroupInfo 		 	domain domain_name gid domain_name
+#
+#SQLLog PASS updatecount
+#SQLNamedQuery updatecount UPDATE "count=count+1 WHERE userid='%u'" users
+#
+#SQLLog PASS counter
+#SQLNamedQuery counter UPDATE "letzter_zugriff=now(), count=count+1 WHERE username='%u'" ftp
+#
+## xfer Log in 
+##mysql
+##SQLLog RETR,STOR transfer1
+##SQLNamedQuery  transfer1 INSERT "'%u', '%f', '%b', '%h', '%a', '%m', '%T', now(), 'c', NULL" xfer_stat
+##SQLLOG ERR_RETR,ERR_STOR transfer2
+##SQLNamedQuery  transfer2 INSERT "'%u', '%f', '%b', '%h', '%a', '%m', '%T', now(), 'i', NULL" xfer_stat
+#</IfModule>
+###
+

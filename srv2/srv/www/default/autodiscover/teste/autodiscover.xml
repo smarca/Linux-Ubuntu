@@ -1,0 +1,62 @@
+<clientConfig version="1.1">
+  <emailProvider id="metropol.com.br">
+    <domain>monital.com.br</domain>
+    <domain>metropol.com.br</domain>
+    <displayName>Metropol Mail</displayName>
+    <displayShortName>Metropol Mail</displayShortName>
+    <incomingServer type="imap">
+      <hostname>imap.metropol.com.br</hostname>
+      <port>993</port>
+      <socketType>SSL</socketType>
+      <username>%EMAILADDRESS%</username>
+      <authentication>password-cleartext</authentication>
+    </incomingServer>
+    <incomingServer type="pop3">
+      <hostname>pop.metropol.com.br</hostname>
+      <port>995</port>
+      <socketType>SSL</socketType>
+      <username>%EMAILADDRESS%</username>
+      <authentication>password-cleartext</authentication>
+      <pop3>
+        <leaveMessagesOnServer>true</leaveMessagesOnServer>
+      </pop3>
+    </incomingServer>
+    <outgoingServer type="smtp">
+      <hostname>smtp.metropol.com.br</hostname>
+      <port>465</port>
+      <socketType>SSL</socketType>
+      <username>%EMAILADDRESS%</username>
+      <authentication>password-cleartext</authentication>
+    </outgoingServer>
+  </emailProvider>
+  <emailProvider id="monital.com.br">
+    <domain>monital.com.br</domain>
+    <domain>monital.com.br</domain>
+    <displayName>Metropol Mail</displayName>
+    <displayShortName>Metropol Mail</displayShortName>
+    <incomingServer type="imap">
+      <hostname>imap.monital.com.br</hostname>
+      <port>993</port>
+      <socketType>SSL</socketType>
+      <username>%EMAILADDRESS%</username>
+      <authentication>password-cleartext</authentication>
+    </incomingServer>
+    <incomingServer type="pop3">
+      <hostname>pop.monital.com.br</hostname>
+      <port>995</port>
+      <socketType>SSL</socketType>
+      <username>%EMAILADDRESS%</username>
+      <authentication>password-cleartext</authentication>
+      <pop3>
+        <leaveMessagesOnServer>true</leaveMessagesOnServer>
+      </pop3>
+    </incomingServer>
+    <outgoingServer type="smtp">
+      <hostname>smtp.monital.com.br</hostname>
+      <port>465</port>
+      <socketType>SSL</socketType>
+      <username>%EMAILADDRESS%</username>
+      <authentication>password-cleartext</authentication>
+    </outgoingServer>
+  </emailProvider>
+</clientConfig>

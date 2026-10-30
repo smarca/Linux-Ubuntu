@@ -1,0 +1,27 @@
+Subject: Falha: $h_subject
+In-Reply-To: $h_message-id
+References: $h_message-id
+X-No-Archive: yes
+  ${if eq{$sender_address}{: $bounce_recipient}{: retorno da mensagem}}
+****
+Esta mensagem foi criada automaticamente pelo software de entrega de correio.
+
+Uma mensagem ${if eq{$sender_address}{$bounce_recipient}{que foi enviada }{enviada por
+
+  <$sender_address>
+
+}}nao pode ser entregue a todos seus destinatarios.
+
+- Assunto da mensagem:        $h_subject
+- Data de envio da mensagem:  $h_date
+- Identicacao da mensagem:    $message_exim_id
+
+Um ou mais enderecos falharam:
+****
+O seguinte texto foi gerado durante as tentativas de entrega:
+****
+------ Esta e uma copia dos cabecalhos da mensagem. ------
+****
+------ O corpo da mensagem possui $message_size caracteres; somente os primeiros
+------ $return_size_limit sao mostrados aqui.
+****

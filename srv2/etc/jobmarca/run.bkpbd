@@ -1,0 +1,155 @@
+#!/bin/bash
+#############################################################################
+# Feito por Silmar A. Marca 
+# smarca@gmail.com - extrair com tar -zxf --preserve backup.tar.gz 
+#############################################################################
+#cd / ;  find . -xdev | cpio -pm /srv/bkp
+#mysqlcheck -c  -u root -p --all-databases
+# mysqlcheck -c  -u root -p --all-databases –auto-repair –check-upgrade –extended –optimize –repair
+
+LOGNAME=marca@`hostname -s`.`dnsdomainname`
+EMAIL=marca@`hostname -s`.`dnsdomainname`
+REPLYTO=marca@`hostname -s`.`dnsdomainname`
+TMPDIR=/tmp
+export EMAIL REPLYTO MAILTO LOGNAME TMPDIR
+MAILTO=root@`hostname`.`dnsdomainname` ; copiaerr=alerta@`hostname`.`dnsdomainname`
+
+BDADMUSR=`cat /etc/mysql/debian.cnf | grep user | tail -n 1 | gawk '{ print $3 }'`
+BDADMPAS=`cat /etc/mysql/debian.cnf | grep password | tail -n 1 | gawk '{ print $3 }'`
+
+#Quais diretorios a fazer backup. Mascaras nao valem para iarq. Usar expressao regexp. Ex. (.*) para todos os tipos
+
+sqlbd[0]='horde5 maildb'
+dst[0]='/srv/bkp/srv2/bd'
+
+#sqlbd[1]='mkt'
+#dst[1]='/srv/www/home/mkt.metropol.com.br/bkp/'
+
+#Diretorios
+NOMELOG=bkpbd
+LOGDIR=/tmp/backup.${NOMELOG}.log
+Subject="ERR-BACKUP ${NOMELOG} `/bin/hostname` - `/bin/date +%Y-%b-%d" "%T" "\(%a\)` $*".
+
+RSEM=00				#Salva Backup da semana rotativo (WW - Domingo 00 a Sabado 06). Default: 00
+RMES=05				#Salva Backup do mes, sobrescrevendo (DD - 01 ao numero de dias do mes - recomendado maximmo 28). Default: 05
+RANO=25-12			#Salva Backup do ano, por tempo indeterminado (DDMM). Melhor se um ou mais dias depois do mensal. Default: 25-12
+
+#mysqldump --all-databases --master-data
+
+#--------------------------------------------------------------------------
+#Dias de historico de um dia da semana
+smin=1	#Minimo de 1
+smax=4	#Maximo de 9
+
+#Pega variaveis
+HORA=`date +%H`     		# Hora  : de 00 a 23
+DSEM=`date +0%w`    		# Semana: de 00 (Domingo), 01(Segunda) a 06 (Sabado)
+DIA=`date +%d`			# Dia   : 01 ao numero de dias
+MES=`date +%m`      		# Mes   : de 01 a 12
+ANO=`date +%Y`			# Ano   : 2011, 2012...
+PREFIX=`date +%Y-%m-%d_` 	# Prefixo do arquivo de backup
+
+#Apaga arquivo de erro antigo
+rm -f ${LOGDIR} 
+
+#PARTE 3: Backup do banco de dados MYSQL
+for (( i=0; i<${#sqlbd[@]}; i++ )); do # for idir in ${src[@]}; do.
+    idst=${dst[$i]}/d/$DSEM/            #Diretorio backup inicial como sendo o do dia da semana
+    mv ${idst} ${dst[$i]}/d/${DSEM}.old  2> /dev/null #Renomeia o diretorio do dia pra .old
+    mkdir -p ${idst} ; cd ${idst}               #Cria e acessa o diretorio
+    for ibdr in ${sqlbd[$i]}; do
+        mysqldump --user=${BDADMUSR} --password=${BDADMPAS} --databases ${ibdr} --skip-dump-date --skip-comments --flush-logs --no-data --create-options | gzip -n > ${idst}/${ibdr}-str.sql.gz
+        mysqldump --user=${BDADMUSR} --password=${BDADMPAS} --databases ${ibdr} --skip-dump-date --skip-comments --flush-logs --no-create-db --no-create-info --single-transaction --skip-extended-insert --complete-insert | gzip -n > ${idst}/${ibdr}-dat.sql.gz
+    done
+done
+
+#PARTE 4: Renomear os diretorios, fazendo rotacao fingindo ser uma fita dat...
+for (( i=0; i<${#dst[@]}; i++ )); do # for item in "${src[@]}"; do
+    #Criar e acessar
+    mkdir -p ${dst[$i]} ; cd ${dst[$i]}	
+    #Remove arquivos duplicados
+    fdupes -qrdN ${dst[$i]} 2>/dev/null >/dev/null
+    #Remove os diretorios correntes caso estejam vazios, ou seja, em caso de erro. Tentativa 1
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d/$DSEM/  2>/dev/null >/dev/null 
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/m/$MES/   2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/a/$ANO/   2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d         2>/dev/null >/dev/null 
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/m         2>/dev/null >/dev/null 
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/a         2>/dev/null >/dev/null 
+  
+    #[Rotacionar anual]
+    if [ "${DIA}-${MES}" == "$RANO" -o ! -d ${dst[$i]}/a/$ANO/ ]; then
+      #find ${dst[$i]}/m/ -ctime +500 -mtime 500 -type f -exec rm -f {} \;	  #Apaga arquivos muito estranhos e antigos
+      if [ -d ${dst[$i]}/d/$DSEM/ ]; then                         #Se mesmo assim, o diretorio existir e ele nao estiver vazio
+  	  rm -rf ${dst[$i]}/a/$ANO/ 2>/dev/null >/dev/null        #     Remove ano se ja existe anteriormente
+	  mkdir -p ${dst[$i]}/a/ ; mv ${dst[$i]}/d/$DSEM/ ${dst[$i]}/a/$ANO/                 #     Salva backup anual
+      elif [ -d ${dst[$i]}/d/$[$DSEM-1]/ ]; then                  #Se nao existir o do dia, tenta o do dia anterior
+  	  rm -rf ${dst[$i]}/a/$ANO/ 2>/dev/null >/dev/null        #     Remove ano se ja existe anteriormente
+  	  mkdir -p ${dst[$i]}/a/ ; mv ${dst[$i]}/d/$[$DSEM-1]/ ${dst[$i]}/a/$ANO/  	      #	    Guarda no diretorio do mes corrente
+      elif [ -d ${dst[$i]}/s/$smin/ ]; then			      #Se nao existir o diario, arquiva o semanal mais recente
+  	  rm -rf ${dst[$i]}/a/$ANO/ 2>/dev/null >/dev/null        #     Remove ano se ja existe anteriormente
+          mkdir -p ${dst[$i]}/a/ ; mv ${dst[$i]}/s/$smin/ ${dst[$i]}/a/$ANO/                 #     Salva backup anual
+      elif [ -d ${dst[$i]}/m/$MES/ ]; then			      #Se nao existir o semanal, arquiva o mensal mais recente
+      	  rm -rf ${dst[$i]}/a/$ANO/ 2>/dev/null >/dev/null        #     Remove ano se ja existe anteriormente
+          mkdir -p ${dst[$i]}/a/ ; mv ${dst[$i]}/m/$MES/ ${dst[$i]}/a/$ANO/                  #     Salva backup anual
+      fi
+    fi
+
+    #[Rotacionar mensal]
+    if [ $DIA -eq $RMES -o ! -d ${dst[$i]}/m/$MES/ ]; then
+      if [ -d ${dst[$i]}/d/$DSEM/ ]; then                             #Se mesmo assim, o diretorio existir e ele nao estiver vazio
+  	  rm -rf ${dst[$i]}/m/$MES/ 2>/dev/null >/dev/null         	  #	Remove mes anterior
+	  mkdir -p ${dst[$i]}/m/ ; mv ${dst[$i]}/d/$DSEM/ ${dst[$i]}/m/$MES/			  #	Guarda no diretorio do mes corrente
+      elif [ -d ${dst[$i]}/d/$[$DSEM-1]/ ]; then                      #Se nao existir o do dia, tenta o do dia anterior
+	  rm -rf ${dst[$i]}/m/$MES/ 2>/dev/null >/dev/null         	  #	Remove mes anterior
+	  mkdir -p ${dst[$i]}/m/ ; mv ${dst[$i]}/d/$[$DSEM-1]/ ${dst[$i]}/m/$MES/		  #	Guarda no diretorio do mes corrente
+      elif [ -d ${dst[$i]}/d/$[$DSEM+1]/ ]; then                      #Se nao existir o do dia, tenta o do dia posterior
+	  rm -rf ${dst[$i]}/m/$MES/ 2>/dev/null >/dev/null         	  #	Remove mes anterior
+	  mkdir -p ${dst[$i]}/m/ ; mv ${dst[$i]}/d/$[$DSEM+1]/ ${dst[$i]}/m/$MES/		  #	Guarda no diretorio do mes corrente
+      elif [ -d ${dst[$i]}/s/$smin/ ]; then		    	          #Se nao existir o diario, arquiva o semanal mais recente
+	  rm -rf ${dst[$i]}/m/$MES/ 2>/dev/null >/dev/null         	  #	Remove mes anterior
+          mkdir -p ${dst[$i]}/m/ ; mv ${dst[$i]}/s/$smin/ ${dst[$i]}/m/$MES/                     #     Salva backup anual
+      fi
+    fi
+
+    #[Rotacionar semanais]
+    #Renomear por semana os arquivos, fazendo com que a semana smin seja a mais recente e a smax a ultima
+    if [ $DSEM -eq $RSEM ]; then
+      if [ -d ${dst[$i]}/d/$DSEM/ ]; then				  #Se mesmo assim, o diretorio existir e ele nao estiver vazio
+  	  if [ -d ${dst[$i]}/s/$[$smax+1] ]; then			  #	Se o backup smax existir
+  	      if [ -d ${dst[$i]}/s/$[$smax] ]; then			  #		Se o mes anterior ao mes maior que smax existir
+		  rm -rf ${dst[$i]}/s/$[$smax+1]			  #			Remove ultima semana
+	      fi
+	  fi
+	  for s in `seq $smax -1 $smin`; do			  #Para todas as semanas, renomear
+	      if [ -d ${dst[$i]}/s/${s}/ ]; then			  #	Se o diretorio x existe
+		  rmdir --ignore-fail-on-non-empty ${dst[$i]}/s/${s}/ #		Tenta remover ele	
+	      fi
+	      if [ $s -eq $smin -a -d ${dst[$i]}/s/${s}/ ]; then	  #	Se mesmo assim, o primeiro diretorio existir e ele nao estiver vazio
+		  mkdir -p ${dst[$i]}/s/ ; mv ${dst[$i]}/s/${s}/ ${dst[$i]}/s/$[$s+1]/	  	  #		Renomeia de n para n+1 fazendo com que ele fique mais antigo	
+	      elif [ $s -gt $smin -a -d ${dst[$i]}/s/${s}/ -a -d ${dst[$i]}/s/${smin} ]; then	  #	Se mesmo assim, os proximos diretorios existir e ele nao estiver vazio
+		  mkdir -p ${dst[$i]}/s/ ; mv ${dst[$i]}/s/${s}/ ${dst[$i]}/s/$[$s+1]/	  	  #		Renomeia de n para n+1 fazendo com que ele fique mais antigo	
+	      fi
+	  done  
+          rm -f ${dst[$i]}/d/$DSEM/*.old 2>/dev/null >/dev/null	  #Remove arquivos old, nao sao mais necessarios nas fitas guardadas
+	  if [ -d ${dst[$i]}/d/$DSEM/ ]; then
+             mkdir -p ${dst[$i]}/s/ ; mv ${dst[$i]}/d/$DSEM/ ${dst[$i]}/s/$smin/  		  #Renomeia o arquivo do dia e arquiva ele
+	  fi
+      fi
+    fi
+
+    #Remove os diretorios correntes caso estejam vazios, ou seja, em caso de erro. Tentativa 1
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d/$DSEM/  2>/dev/null >/dev/null 
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/m/$MES/   2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/a/$ANO/   2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d         2>/dev/null >/dev/null 
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/m         2>/dev/null >/dev/null 
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/a         2>/dev/null >/dev/null 
+  done
+
+#Email em caso de erro
+if [ -f ${LOGDIR} ]; then
+    #smbstatus ou lsof -n | grep /diretorio
+    cat ${LOGDIR} | /usr/bin/mutt -a ${LOGDIR} -s "$Subject" -b $copiaerr -- $MAILTO
+fi
+

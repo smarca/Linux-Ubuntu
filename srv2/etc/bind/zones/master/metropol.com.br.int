@@ -1,0 +1,103 @@
+$TTL	1D
+;###########################################################################
+;#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+;###########################################################################
+;#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+;#  *  Informe ao autor sobre falhas ou incremento de funcoes            *  #
+;#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+;###########################################################################
+@ 	IN SOA intsrv2 suporte.metropol.com.br. (
+		2017112900 ; serial
+		30M ; refresh
+		15M ; retry
+		12H ; expire
+		2H  ; Negative Cache TTL
+	)
+			IN	A	10.0.0.2
+			IN	A	10.0.0.1
+			IN      NS      intsrv1
+			IN      NS      intsrv2
+			IN	MX	0	intsrv2
+			IN	TXT	"v=spf1 mx a:intsrv1.metropol.com.br a:intsrv2.metropol.com.br -all"
+			IN 	SPF 	"v=spf1 mx a:intsrv1.metropol.com.br a:intsrv2.metropol.com.br -all"
+			IN	RP	Marca. suporte.metropol.com.br.
+$ORIGIN @
+
+;----------------------------------------------------------------------------
+;# Servidores Principais
+$TTL	5M
+intsrv			IN	A	10.0.0.2
+			IN	A	10.0.0.1
+
+intsrv1			IN	A	10.0.0.1
+			IN	MX	0	intsrv1
+
+intsrv2			IN	A	10.0.0.2
+			IN	MX	0	intsrv2
+;----------------------------------------------------------------------------
+$TTL	3H
+srv			IN	A	177.220.156.178
+			IN	A	177.220.156.179
+vip                     IN      A       177.220.156.180
+;                       IN      A       177.220.156.178
+;                       IN      A       177.220.156.179
+cam                     IN      A       177.220.156.181
+voip                    IN      A       177.220.156.182
+
+srv1			IN	A	177.220.156.178
+			IN	MX	0	srv1
+
+srv2			IN	A	177.220.156.179
+			IN	MX	0	srv2
+
+sti                     IN      A       138.122.152.227
+;----------------------------------------------------------------------------
+;# Maquinas apelido pra servidor principal
+$TTL    3H
+www                     IN      CNAME   @
+home                    IN      CNAME   @
+;boleto                 IN      CNAME   @
+;cliente                IN      CNAME   @
+;clientes               IN      CNAME   @
+;----------------------------------------------------------------------------
+$TTL    3H
+ntp                     IN      CNAME   intsrv2
+;painel                 IN      CNAME   intsrv2
+webmail                 IN      CNAME   intsrv2
+webmail2                IN      CNAME   intsrv1
+$TTL    1H
+;mkt                    IN      CNAME   intsrv2
+dvr                     IN      CNAME   intsrv2
+ddns                    IN      CNAME   intsrv2
+stat1                   IN      CNAME   intsrv1
+stat2                   IN      CNAME   intsrv2
+traf1                   IN      CNAME   intsrv1
+traf2                   IN      CNAME   intsrv2
+
+;----------------------------------------------------------------------------
+$TTL    3H
+mail                    IN      CNAME   intsrv2
+smtp                    IN      CNAME   intsrv2
+imap                    IN      CNAME   intsrv2
+pop                     IN      CNAME   intsrv2
+pop3                    IN      CNAME   intsrv2
+
+;----------------------------------------------------------------------------
+$TTL    1H
+autoconfig              IN      CNAME   intsrv2
+autodiscover            IN      CNAME   intsrv2
+
+;----------------------------------------------------------------------------
+;Configurar Modem Externamente
+$TTL    5M
+mdm1-srv1               IN      CNAME   intsrv1
+mdm2-srv1               IN      CNAME   intsrv1
+mdm3-srv1               IN      CNAME   intsrv1
+mdm1-srv2               IN      CNAME   intsrv2
+mdm2-srv2               IN      CNAME   intsrv2
+mdm3-srv2               IN      CNAME   intsrv2
+
+;----------------------------------------------------------------------------
+_domainkey 14400 IN       TXT     "o=~; r=suporte@metropol.com.br"
+cur._domainkey 14400 IN       TXT     "dk2017112900"
+dk2017112900._domainkey 14400 IN TXT ("v=DKIM1; k=rsa; dkim=discardable; g=*; p=""MIIBKDANBgkqhkiG9w0BAQEFAAOCARUAMIIBEAKCAQcA76BJ+uCTHS+Cg+sxYEjc""TJ0lbJHpqqlh6CDMpbdX5+qx5TP0QiQGbuYr9edkVEEuczIb6/LL5HU6YAgAbbew""LBWsWh8mRZR6tb720pB0VzeAFF6JJYuQhG7Dh+KKRZYw4axnCmc6qwXMhD7Q/kCc""VonUHz7yi8Lh7RJbCYwV8Dze1l+bpz0qWAIq/7sy9951pT9jSNToywwGEipJqGI+""BzQmEu62zpFlxB3sNIxQ3fMoAiGTfjpCPp3bHRq9x2lsPLYYnwgdpeGmxspuVmr/""eHvQ780JlxkTxgvpS/72jPGCY8s3DQUMXLnH/kLK1R2Fw4Tu2G30cGHMMiOeKWsw""fLuOWU8iMQIDAQAB")

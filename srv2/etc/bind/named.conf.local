@@ -1,0 +1,176 @@
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones/zones.rfc1918";
+
+//-----------------------------------------------------------
+view "int" {
+    recursion yes;
+    additional-from-auth yes;
+    additional-from-cache yes;
+    notify yes;
+    also-notify { 10.0.0.1; };
+    empty-zones-enable yes;
+    match-clients   { localhost; CLIENT_INT; }; 
+    // match-destinations { localhost; };
+    allow-query     { localhost; CLIENT_INT; };
+    allow-transfer  { SLAVE_INT; key key_int; };
+    allow-update-forwarding { key key_int; };
+    allow-update    { key key_int; };
+    // update-policy   { grant "teste" self * PTR TXT DHCID;}; 
+    request-ixfr yes;
+    minimal-responses yes;
+
+    // Malware
+    include "/etc/bind/zones/block/conf.domain";
+    // prime the server with knowledge of the root servers
+    zone "." {
+        type hint;
+        file "/etc/bind/db.root";
+    };
+
+    // evitar abusos por redirecionamentos de sites inexistentes
+    zone "com" { type delegation-only; };
+    zone "net" { type delegation-only; };
+    // root-delegation-only exclude { "com"; "net" };
+
+
+    // be authoritative for the localhost forward and reverse zones, and for
+    // broadcast zones as per RFC 1912
+    zone "localhost" {
+        type master;
+        file "/etc/bind/db.local";
+    };
+    zone "127.in-addr.arpa" {
+        type master;
+        file "/etc/bind/db.127";
+    };
+    zone "0.in-addr.arpa" {
+	type master;
+        file "/etc/bind/db.0";
+    };
+    zone "255.in-addr.arpa" {
+        type master;
+        file "/etc/bind/db.255";
+    };
+
+    // Zonas DDNS
+    zone "localnet" in {
+        type master;
+        file "/etc/bind/zones/localnet/named.localnet";
+	// masters         { 10.0.0.2; };
+        // forwarders      { 10.0.0.2; };
+        // forward first;
+    };
+    zone "10.in-addr.arpa" in {
+        type master;
+        file "/etc/bind/zones/localnet/named.10";
+	// masters         { 10.0.0.2; };
+        // forwarders      { 10.0.0.2; };
+        // forward first;
+    };
+    #zone "16.172.in-addr.arpa" in {
+    #    type master;
+    #    file "/etc/bind/zones/localnet/named.172.16";
+    #	// masters         { 10.0.0.2; };
+    #    // forwarders      { 10.0.0.2; };
+    #    // forward first;
+    #};
+    #zone "168.192.in-addr.arpa" in {
+    #    type master;
+    #    file "/etc/bind/zones/localnet/named.192.168";
+    #	// masters         { 10.0.0.2; };
+    #    // forwarders      { 10.0.0.2; };
+    #    // forward first;
+    #};
+
+    #zone "168.192.in-addr.arpa" {
+    #   type forward;
+    #   forward only;
+    #   forwarders { 192.168.1.1; };
+    #};
+
+    // All Zones
+    include "/etc/bind/named.conf.allzones";
+
+    zone "monital.com.br" in {
+        type master;
+        file "/etc/bind/zones/master/monital.com.br.int";
+        // masters         { 10.0.0.2; };
+    };
+    zone "metropol.com.br" in {
+        type master;
+        file "/etc/bind/zones/master/metropol.com.br.int";
+        // masters         { 10.0.0.2; };
+    };
+    zone "monital.net.br" in {
+        type master;
+        file "/etc/bind/zones/master/monital.net.br.int";
+        // masters         { 10.0.0.2; };
+    };
+#    zone "monitoramentoparticipativo.com.br" in {
+#        type master;
+#        file "/etc/bind/zones/master/monitoramentoparticipativo.com.br";
+#        // masters         { 10.0.0.2; };
+#    };
+    zone "monitrace.com.br" in {
+	type master;
+	file "/etc/bind/zones/master/monitrace.com.br.int";
+        // masters         { 10.0.0.2; };
+    };
+};
+
+view "ext" {
+    match-clients { any; };
+    recursion yes;
+    additional-from-auth yes;
+    additional-from-cache yes;
+    notify yes;
+    also-notify { 177.220.156.178; };
+    empty-zones-enable yes;
+    allow-query { CLIENT_EXT; SLAVE_EXT; };
+    allow-recursion { CLIENT_EXT; SLAVE_EXT; };
+    allow-transfer  { SLAVE_EXT; key key_ext; };
+    allow-update-forwarding { key key_ext; };
+    allow-update    { key key_ext; };
+    request-ixfr no;
+    transfer-format one-answer;
+    minimal-responses no;
+
+    // All Zones
+    include "/etc/bind/named.conf.allzones";
+
+    zone "monital.com.br" in {
+        type master;
+        file "/etc/bind/zones/master/monital.com.br";
+        // masters{ 177.220.156.179; };
+        allow-query { any; };
+    };
+    zone "metropol.com.br" in {
+        type master;
+        file "/etc/bind/zones/master/metropol.com.br";
+        // masters{ 177.220.156.179; };
+        allow-query { any; };
+    };
+    zone "monital.net.br" in {
+        type master;
+        file "/etc/bind/zones/master/monital.net.br";
+        // masters{ 177.220.156.179; };
+        allow-query { any; };
+    };
+    zone "monitoramentoparticipativo.com.br" in {
+        type master;
+        file "/etc/bind/zones/master/monitoramentoparticipativo.com.br";
+        // masters{ 177.220.156.179; };
+        allow-query { any; };
+    };
+    zone "monitrace.com.br" in {
+	type master;
+	file "/etc/bind/zones/master/monitrace.com.br";
+        // masters{ 177.220.156.179; };
+	allow-query { any; };
+    };
+};

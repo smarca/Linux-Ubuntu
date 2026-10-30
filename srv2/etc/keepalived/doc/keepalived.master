@@ -1,0 +1,83 @@
+###########################################################################
+#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe o autor sobre falhas ou incremento de funcoes            *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+#tcpdump -i eth0 -s0 -vv net 224.0.0.0/4
+#https://github.com/frsyuki/keepalived-check/blob/master/test/keepalived.conf.vrrp.localcheck
+#http://blackbird.si/loadbalancing-failover-with-ipvs-and-keepalived/
+#https://syedali.net/2014/03/08/high-availability-using-keepalived/
+
+#############################################################################################################################################
+# ROTA PADRAO
+#############################################################################################################################################
+vrrp_script chk_rGW_A_1 {
+    script "/etc/keepalived/ping.sh 8.8.8.8 eth2 fail"
+    interval 10   # check every x seconds
+    fall 1        # requer x failures para ERRO
+    rise 2        # requer x acertos para OK
+    timeout 3     # timerout do script para achar que deu erro
+}
+vrrp_script chk_rGW_A_2 {
+    script "/etc/keepalived/ping.sh 8.8.4.4 eth2 fail"
+    interval 10   # check every x seconds
+    fall 1        # requer x failures para ERRO
+    rise 2        # requer x acertos para OK
+    timeout 3     # timerout do script para achar que deu erro
+}
+
+vrrp_instance vGW_A {
+    state MASTER
+    interface eth0
+    virtual_router_id 1
+    track_script {
+        chk_rGW_A_1
+        chk_rGW_A_2
+    }
+    virtual_routes {
+       default via 177.220.156.177 dev eth1 metric 2
+    }
+}
+
+#############################################################################################################################################
+# IP VITUAL SEMPRE ONLINE
+#############################################################################################################################################
+vrrp_script chk_vIP_A_1 {
+    script "/etc/keepalived/ping.sh 177.220.156.177 eth1"
+    interval 2   # check every x seconds
+    fall 1       # requer x failures para ERRO
+    rise 10      # requer x acertos para OK
+    timeout 3    # timerout do script para achar que deu erro
+}
+
+vrrp_instance vIP_A {
+    state MASTER
+    interface eth0
+    virtual_router_id 200
+    priority 2
+    track_script {
+        chk_vIP_A_1
+    }
+    track_interface {
+	eth1
+    }
+    virtual_ipaddress {
+         177.220.156.180 dev eth1 label eth1:vip
+    }
+    authentication {
+        auth_type PASS
+        auth_pass M0n!t@L$
+    }
+    vrrp_unicast_bind 10.0.0.2
+    vrrp_unicast_peer 10.0.0.1
+}
+
+
+
+
+
+
+
+

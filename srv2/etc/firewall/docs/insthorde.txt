@@ -1,0 +1,71 @@
+#http://www.horde.org/apps/groupware/docs/INSTALL
+
+apt-get install php5-imagick libpuzzle-php libpuzzle-bin php5-ldap
+
+mkdir -p /srv/www/default/horde5
+
+pear config-create /srv/www/default/horde5 /srv/www/default/horde5/pear.conf
+
+pear -c /srv/www/default/horde5/pear.conf install pear
+
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf channel-discover pear.horde.org 
+
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf channel-discover pecl.php.net
+
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf install horde/horde_role
+
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf run-scripts horde/horde_role
+>> Informar /srv/www/default/horde5/
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf config-get bin_dir
+
+#OPCIONAL# /srv/www/default/horde5/pear/pecl -c /srv/www/default/horde5/pear.conf install imagick  
+#OPCIONAL# /srv/www/default/horde5/pear/pecl -c /srv/www/default/horde5/pear.conf install lzf
+#OPCIONAL# /srv/www/default/horde5/pear/pecl -c /srv/www/default/horde5/pear.conf install memcache  
+
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf install -a horde/groupware
+
+PHP_PEAR_SYSCONF_DIR=/srv/www/default/horde5 php -d include_path=/srv/www/default/horde5/pear/php /srv/www/default/horde5/pear/groupware-install
+>> Banco de dados mysql 
+>>   usuario horde5:Awp0Kr##.Hanq
+>>   tcp, 127.0.0.1 (um pouco mais lento, mas possibilita bd em outro servidor em caso de pane geral e rodar em safe mode melhor!)
+>>   administrador marca@monital.com.br:marcakq...
+
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf install -a horde/imp
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf install -a horde/passwd
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf install -a horde/webmail
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf install -a horde/gollem
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf uninstall horde/trean
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf uninstall horde/groupware
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf list
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf upgrade-all
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf remote-list -c horde
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf run-scripts horde/Horde_Role
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf install --force pear/Date_Holidays_Brazil
+
+chown www-data.www-data /srv/www/default/horde5/lib/../static
+
+#Dar permissoes nos diretorios de configuracao
+#touch conf.php conf.bak.php
+#chown www-data.www-data conf.php conf.bak.php
+
+
+
+apache.conf
+php_value include_path /srv/www/default/horde5/pear/php
+SetEnv PHP_PEAR_SYSCONF_DIR /srv/www/default/horde5
+AcceptPathInfo On
+extension=fileinfo.so
+extension=lzf.so
+extension=pam.so
+aspell
+
+
+
+#UPGRADE
+#http://www.horde.org/apps/horde/docs/UPGRADING
+#/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf upgrade --force -a -B -c horde
+/srv/www/default/horde5/pear/pear -c /srv/www/default/horde5/pear.conf upgrade -a -B -c horde
+chown -R root.www-data /srv/www/default/horde5/
+chown www-data.www-data /srv/www/default/horde5/lib/../static/
+rm /srv/www/default/horde5/pear/download/*
+rm /srv/www/default/horde5/pear/cache/*

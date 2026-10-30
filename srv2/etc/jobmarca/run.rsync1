@@ -1,0 +1,63 @@
+#! /bin/sh
+#ln -s /etc/rsync/rsyncd.conf /etc/rsyncd.conf
+LOGNAME=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+EMAIL=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+REPLYTO=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+MAILTO=alerta@`/bin/hostname`.`/bin/dnsdomainname`
+export REPLYTO MAILTO LOGNAME
+
+#Ajustes iniciais
+
+PWDFILE="/etc/rsync/pwd.bkup1"
+LOG="%t : %o: %f : modif %M, perm %B, uid %U gid %G, size %l"
+PARMS="--ipv4 --recursive --times --sparse --delete"
+PERMS="-a --perms --owner --group" 
+
+SOURCE1="bkup1@10.0.0.1::mail"
+DESTINATION1="/srv/mail/srv1/"
+
+SOURCE2="bkup1@10.0.0.1::bkpsys"
+DESTINATION2="/srv/bkp/srv1/"
+
+SOURCE3="bkup1@10.0.0.1::prog/sistema"
+DESTINATION3="/srv/smb/bkup/Suporte/srv1/prog"
+
+SOURCE4="bkup1@10.0.0.1::bkpprog"
+DESTINATION4="/srv/smb/bkup/Suporte/srv1/bkup"
+
+#Variaveis de Ambiente
+HORA=`date +%H`
+DSEM=`date +%w`
+
+#Ajuste de log
+cd /tmp
+
+#Ajuste de criacao de diretorios
+mkdir -p $DESTINATION1
+mkdir -p $DESTINATION2
+mkdir -p $DESTINATION3
+
+if [ "$HORA" -ge 22 -a "$HORA" -le 23 -a "$DSEM" -eq 6 ]; then		#Sabado a noite, uma unica hora - Sincronismo completo com checagem de conteudo. Sync
+   #Documentos
+   umount /mnt/bkp 2> /dev/null 
+   mount /mnt/bkp && mkdir -p /mnt/bkp/srv/ && rsync -a --recursive --delete --perms --owner --group /srv/ /mnt/bkp/srv/ 
+   umount /mnt/bkp 2> /dev/null 
+   #Emails
+   rsync --password-file=$PWDFILE --checksum $PARMS $PERMS $SOURCE1 $DESTINATION1 --log-format="$LOG" >> /var/log/rsync/rsync.log 2>> /var/log/rsync/rsync.log 
+elif [ "$HORA" -ge 0 -a "$HORA" -le 6 ]; then              		#Todas madrugadas - Sincronismo completo por tamanho e data de modificacao
+   #Emails
+   rsync --password-file=$PWDFILE $PARMS $PERMS $SOURCE1 $DESTINATION1 --log-format="$LOG" >> /var/log/rsync/rsync.log 2>> /var/log/rsync/rsync.log 
+   #Backup dos backups dos programas
+   rsync --password-file=$PWDFILE $PARMS $PERMS $SOURCE4 $DESTINATION4 --log-format="$LOG" >> /var/log/rsync/rsync.log 2>> /var/log/rsync/rsync.log 
+else									#Outros dias - Sincronismo completo por tamanho e data de modificacao
+   #Emails
+   rsync --password-file=$PWDFILE $PARMS $PERMS $SOURCE1 $DESTINATION1 --log-format="$LOG" >> /var/log/rsync/rsync.log 2>> /var/log/rsync/rsync.log  
+fi
+
+#Backup dos backups
+rsync --password-file=$PWDFILE $PARMS $SOURCE2 $DESTINATION2 --log-format="$LOG" --max-delete=1 >> /var/log/rsync/rsync.log 2>> /var/log/rsync/rsync.log 
+
+#Sync Arquivos de programas, cópias mirror
+rsync --password-file=$PWDFILE $PARMS $SOURCE3 $DESTINATION3 --log-format="$LOG" | tee $DESTINATION3/../prog.log >> /var/log/rsync/rsync.log 2>> /var/log/rsync/rsync.log 
+
+# rsync -v -n -r --delete -xp /srv/mail/ /mnt/bkphd/srv/mail/

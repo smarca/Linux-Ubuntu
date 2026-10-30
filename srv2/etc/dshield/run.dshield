@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ -f /etc/dshield/dshield.cnf ]; then
+   mkdir -p /etc/dshield/state/
+   /etc/dshield/iptables.pl -config=/etc/dshield/dshield.cnf
+fi

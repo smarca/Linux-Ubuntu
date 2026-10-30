@@ -1,0 +1,203 @@
+#!/bin/bash
+
+###########################################################################
+#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe ao autor sobre falhas ou incremento de funcoes           *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+
+LANG=pt_BR
+mkdir -p /srv/www/default/stat/macs/
+# ln -f /etc/firewall/mac.ini /srv/www/default/stat/macs/mac_free.txt
+
+now="$(date +"%Y-%m-%d")"
+lastmonth="$(date --date='3 month ago' +"%Y-%m-%d")"
+
+#Arp basico atual e anterior acumulado apenas para eth0
+/usr/sbin/arp -a | grep -v "incomp" | sort -k 4 | grep eth0 | awk -v date="$(date +"%Y-%m-%d %H:%M:%S")" '/ /{printf("%s %18-s %4-s %16-s %30-s \n", date, $4,$7,substr($2,2,length($2)-2),$1);}' >> /srv/www/default/stat/macs/.cln_arp.txt
+cat /srv/www/default/stat/macs/.cln_arp.txt | sort -r -k1,2 | sort -uk3,3 | sort -r -k1,2 > /srv/www/default/stat/macs/.cln_arp2.txt
+cat /srv/www/default/stat/macs/.cln_arp2.txt | awk '$1>=from&&$1<=to' from=$lastmonth to=$now > /srv/www/default/stat/macs/.cln_arp.txt
+rm /srv/www/default/stat/macs/.cln_arp2.txt
+
+function _arpstat {
+    date       > /srv/www/default/stat/macs/cln_arp.txt
+    cat /var/lib/dhcp/dhcpd.leases | awk -F " " '{
+    if ( $1 == "lease" ) {
+        DNSIP=$2;       Hostname="";    DNSRev="";      Estado="";      DtEND="";       DtINI="";
+    }
+
+    if ( $1             == "client-hostname" )          { Hostname=substr($2,2,length($2)-3); };
+    if ( $1" "$2        == "set ddns-fwd-name" )        { DNSRev=substr($4,2,length($4)-3); };
+    if ( $1" "$2        == "hardware ethernet" )        { MACAdr=substr($3,1,length($3)-1); };
+    if ( $1" "$2        == "binding state" )            { Estado=substr($3,1,length($3)-1); };
+    if ( $1             == "ends" )                     { DtEND=$3"  "substr($4,1,length($4)-1); };
+    if ( $1             == "starts" )                   { DtINI=$3"  "substr($4,1,length($4)-1); };
+
+    if ( ($1 == "}") && (Estado == "active") && (DNSRev != "")) {
+        printf("%s\n",MACAdr);
+    };
+    }' | sort -dbfur >> /tmp/stat.dhcp
+    cat /srv/www/default/stat/macs/.cln_arp.txt | grep -ivf /tmp/stat.dhcp | sort > /tmp/stat.nodhcp
+    
+    echo "-- [Clone Macs e Fixos]:" >> /srv/www/default/stat/macs/cln_arp.txt
+    cat /srv/www/default/stat/macs/.cln_arp.txt | grep -if /tmp/stat.nodhcp >> /srv/www/default/stat/macs/cln_arp.txt
+    #Ordem por Hardware
+    echo "--[Normais]:" >> /srv/www/default/stat/macs/cln_arp.txt
+    cat /srv/www/default/stat/macs/.cln_arp.txt | grep -ivf /tmp/stat.nodhcp >> /srv/www/default/stat/macs/cln_arp.txt
+    rm -f /tmp/stat.*
+}
+
+function _constat {
+    date       > /srv/www/default/stat/macs/con_total_cln.txt
+    echo "Estatistica de conexoes por usuario (se > 10) !EXPERIMENTAL/EM TESTE!" >>  /srv/www/default/stat/macs/con_total_cln.txt
+    echo "- Numero de tentativas para novas conexoes:" >> /srv/www/default/stat/macs/con_total_cln.txt
+    /usr/sbin/conntrack -L 2> /dev/null | egrep "SYN_SENT"  | awk -F " " '{ printf("%15-s\n", substr($5,5,length($5)-1),$5) }'  | sort | uniq -dc |  sort -r | gawk -F " " '{ if ($1 > 10) printf("%6i  %15-s\n",$1,$2); }' >> /srv/www/default/stat/macs/con_total_cln.txt
+    echo "- Numero de conexoes atualmente estabelecidas:" >> /srv/www/default/stat/macs/con_total_cln.txt
+    /usr/sbin/conntrack -L 2> /dev/null | egrep "(^udp|ESTABLISHED)"  | awk -F " " '{ printf("%15-s\n", substr($5,5,length($5)-1),$5) }'  | sort | uniq -dc |  sort -r | gawk -F " " '{ if ($1 > 10) printf("%6i  %15-s\n",$1,$2); }' >> /srv/www/default/stat/macs/con_total_cln.txt
+    echo "- Numero de conexoes atualmente ociosas:" >> /srv/www/default/stat/macs/con_total_cln.txt
+    /usr/sbin/conntrack -L 2> /dev/null | egrep "(TIME_WAIT)"  | awk -F " " '{ printf("%15-s\n", substr($5,5,length($5)-1),$5) }'  | sort | uniq -dc |  sort -r | gawk -F " " '{ if ($1 > 10) printf("%6i  %15-s\n",$1,$2); }' >> /srv/www/default/stat/macs/con_total_cln.txt
+}
+
+
+function _portstat {
+    date       > /srv/www/default/stat/macs/con_total_prt.txt
+    echo "Estatistica de conexoes por porta (se > 5) !EXPERIMENTAL/EM TESTE!" >>  /srv/www/default/stat/macs/con_total_prt.txt
+    echo "-Numero de tentativas/conexoes TCP porta de DESTINO:" >>  /srv/www/default/stat/macs/con_total_prt.txt
+    /usr/sbin/conntrack -L 2> /dev/null | awk -F " " '{ \
+    if (($1 == "tcp") && substr($8,1,5) == "dport") { \
+	printf("%6-s %s \n", substr($8,7,length($8)-1),$1); \
+    } \
+    }'  | sort | uniq -dc |  sort -r | gawk -F " " '{ if ($1 > 5) printf("%6i  %6-s %s\n",$1,$2,$3); }' >>  /srv/www/default/stat/macs/con_total_prt.txt
+    echo "-Numero de tentativas/conexoes UDP porta de DESTINO:" >>  /srv/www/default/stat/macs/con_total_prt.txt
+    /usr/sbin/conntrack -L 2> /dev/null | awk -F " " '{ \
+    if (($1 == "udp") && substr($7,1,5) == "dport") { \
+	printf("%6-s %s \n", substr($7,7,length($7)-1),$1); \
+    } \
+    }'  | sort | uniq -dc |  sort -r | gawk -F " " '{ if ($1 > 5) printf("%6i  %6-s %s\n",$1,$2,$3); }' >>  /srv/www/default/stat/macs/con_total_prt.txt
+    echo "-Duvidas? http://www.dshield.org/port.html?port=NUMEROPORTA" >> /srv/www/default/stat/macs/con_total_prt.txt
+    echo "         http://isc.sans.org/port.html?port=NUMEROPORTA" >> /srv/www/default/stat/macs/con_total_prt.txt
+}
+
+
+function _cltportstat {
+    date       > /srv/www/default/stat/macs/con_clnprt.txt
+    echo "Estatistica de conexoes por porta e cliente (se > 5) !EXPERIMENTAL/EM TESTE!" >  /srv/www/default/stat/macs/con_clnprt.txt
+    echo "-Numero de tentativas/conexoes TCP porta de DESTINO:" >>  /srv/www/default/stat/macs/con_clnprt.txt
+    echo " NumCn  Porta  Prot   IPOrigem" >>  /srv/www/default/stat/macs/con_clnprt.txt
+    /usr/sbin/conntrack -L 2> /dev/null | awk -F " " '{ \
+    if (($1 == "tcp") && substr($8,1,5) == "dport") { \
+	printf("%6-d %s %15-s \n", substr($8,7,length($8)-1),$1,substr($5,5,length($5)-1)); \
+    } \
+    }'  | sort | uniq -dc |  sort -r | gawk -F " " '{ if ($1 > 5) printf("%6i  %6-s %6-s %s\n",$1,$2,$3,$4); }' >>  /srv/www/default/stat/macs/con_clnprt.txt
+    echo "-Numero de tentativas/conexoes UDP porta de DESTINO:" >>  /srv/www/default/stat/macs/con_clnprt.txt
+    echo " NumCn  Porta  Prot   IPOrigem" >>  /srv/www/default/stat/macs/con_clnprt.txt
+    /usr/sbin/conntrack -L 2> /dev/null | awk -F " " '{ \
+    if (($1 == "udp") && substr($7,1,5) == "dport") { \
+	printf("%6-s %s %15-s \n", substr($7,7,length($7)-1),$1,substr($4,5,length($4)-1)); \
+    } \
+    }'  | sort | uniq -dc |  sort -r | gawk -F " " '{ if ($1 > 5) printf("%6i  %6-s %6-s %s\n",$1,$2,$3,$4); }' >>  /srv/www/default/stat/macs/con_clnprt.txt
+    echo "-Duvidas? http://www.dshield.org/port.html?port=NUMEROPORTA" >> /srv/www/default/stat/macs/con_clnprt.txt
+    echo "         http://isc.sans.org/port.html?port=NUMEROPORTA" >> /srv/www/default/stat/macs/con_clnprt.txt
+}
+
+function _dhcpstat {
+    echo "-- [Horário em UTC]:" > /srv/www/default/stat/macs/cln_dhcp.txt
+    date --utc >> /srv/www/default/stat/macs/cln_dhcp.txt
+    date       >> /srv/www/default/stat/macs/cln_dhcp.txt
+    echo "-- [Ativos]: " >> /srv/www/default/stat/macs/cln_dhcp.txt
+    cat /var/lib/dhcp/dhcpd.leases | awk -F " " '{
+    if ( $1 == "lease" ) {
+        DNSIP=$2;       Hostname="";    DNSRev="";      Estado="";      DtEND="";       DtINI="";
+    }
+
+    if ( $1             == "client-hostname" )          { Hostname=substr($2,2,length($2)-3); };
+    if ( $1" "$2        == "set ddns-fwd-name" )        { DNSRev=substr($4,2,length($4)-3); };
+    if ( $1" "$2        == "hardware ethernet" )        { MACAdr=substr($3,1,length($3)-1); };
+    if ( $1" "$2        == "binding state" )            { Estado=substr($3,1,length($3)-1); };
+    if ( $1             == "ends" )                     { DtEND=$3"  "substr($4,1,length($4)-1); };
+    if ( $1             == "starts" )                   { DtINI=$3"  "substr($4,1,length($4)-1); };
+
+    if ( ($1 == "}") && ((Estado == "active") )) {
+	if (DNSRev == "") { DNSRev="-"; }
+        printf("%s  %s  %40-s  %15-s %30-s %s\n",DtINI,MACAdr,DNSRev,DNSIP,Hostname,Estado);
+    };
+    }' | tr "/" "-" | sort -dbfur -k 3,5 -b | sort -dbfr -k 1,2 -b  >> /srv/www/default/stat/macs/cln_dhcp.txt
+    echo "-- [Outros Estados]: " >> /srv/www/default/stat/macs/cln_dhcp.txt
+    cat /var/lib/dhcp/dhcpd.leases | awk -F " " '{
+    if ( $1 == "lease" ) {
+        DNSIP=$2;       Hostname="";    DNSRev="";      Estado="";      DtEND="";       DtINI="";
+    }
+
+    if ( $1             == "client-hostname" )          { Hostname=substr($2,2,length($2)-3); };
+    if ( $1" "$2        == "set ddns-fwd-name" )        { DNSRev=substr($4,2,length($4)-3); };
+    if ( $1" "$2        == "hardware ethernet" )        { MACAdr=substr($3,1,length($3)-1); };
+    if ( $1" "$2        == "binding state" )            { Estado=substr($3,1,length($3)-1); };
+    if ( $1             == "ends" )                     { DtEND=$3"  "substr($4,1,length($4)-1); };
+    if ( $1             == "starts" )                   { DtINI=$3"  "substr($4,1,length($4)-1); };
+
+    if ( ($1 == "}") && (((Estado != "backup") && (Estado != "active")) )) {
+	if (DNSRev == "") { DNSRev="-"; }
+        printf("%s  %s  %40-s  %15-s %30-s %s\n",DtINI,MACAdr,DNSRev,DNSIP,Hostname,Estado);
+    };
+    }' | tr "/" "-" | awk '$1>=from&&$1<=to' from=$lastmonth to=$now | sort -r -k1,2 | sort -uk3,3 | sort -dbfur -k 3,5 -b | sort -dbfr -k 1,2 -b  >> /srv/www/default/stat/macs/cln_dhcp.txt
+
+}
+
+function _errstat {
+    date       > /srv/www/default/stat/macs/ips_err.txt
+    echo "Rede                IpSrv               Eth" >> /srv/www/default/stat/macs/ips_err.txt
+    ip route | grep -v "127.0.0" | grep -v "default" | gawk  '{printf("%18-s  %18-s  %s\n",$1,$9,$3);}' | sort -k 3 -b >> /srv/www/default/stat/macs/ips_err.txt 
+    echo -e "\n\n\n" >> /srv/www/default/stat/macs/ips_err.txt
+    echo "Data             Mac                Src                 Eth " >> /srv/www/default/stat/macs/ips_err.txt
+    egrep "kernel:.*(martian source|ll header)" /var/log/messages | gawk -F " " '{ \
+        if (match($7$8,"martiansource") != 0) {
+            DATA=$1"/"$2"-"$3; ETH=$14; DST=$8; SRC=substr($11,1,length($11)-1);
+        } \
+        if (match($7$8,"llheader") != 0) {
+            MAC=substr($9,19,17); \
+            printf("%15-s  %17-s  %15-s  %s\n",DATA, MAC, SRC, ETH);
+        } \
+    }' | sort -dbfur  -k 2,3 |  sort -dbfr -k 1 -b >>  /srv/www/default/stat/macs/ips_err.txt
+}
+
+
+function _blkstat {
+    date       > /srv/www/default/stat/macs/mac_filt.txt
+    echo "Data             Eth   Mac                Ip             " >> /srv/www/default/stat/macs/mac_filt.txt
+    egrep "kernel: Pkt: (m)" /var/log/firewall/firewall.log | gawk -F " " '{ \
+            DATA=$1"/"$2"-"$3; ETH=substr($8,4,length($8)-1); MAC=substr($10,23,17); \
+	    SRC=substr($11,5,length($11)-1); DST=substr($12,5,length($12)-1); \
+            printf("%s  %s  %s  %15-s\n",DATA, ETH , MAC, SRC);
+    }' | sort -dbfur  -k 3,4 |  sort -dbfr -k 1 -b 		 >> /srv/www/default/stat/macs/mac_filt.txt
+}
+
+
+function _smbstat {
+  touch /srv/www/default/stat/macs/smb_hosts.txt
+  smbtree -b --no-pass | awk -v date="$(date +"%Y-%m-%d %H:%M:%S")" '/ /{ print date,$1}' > /srv/www/default/stat/macs/.smb_hosts.txt
+  cat /srv/www/default/stat/macs/smb_hosts.txt /srv/www/default/stat/macs/.smb_hosts.txt | sort -r -k1,2 | sort -u -k3 | sort -r -k1,2 > /srv/www/default/stat/macs/.smb_hosts2.txt
+
+  cat /srv/www/default/stat/macs/.smb_hosts2.txt | awk '$1>=from&&$1<=to' from=$lastmonth to=$now > /srv/www/default/stat/macs/smb_hosts.txt
+
+  rm /srv/www/default/stat/macs/.smb_hosts.txt
+  rm /srv/www/default/stat/macs/.smb_hosts2.txt
+}
+
+#-Funcao Principal
+#if [ "$*" == "" ]; then
+#    # _blkstat
+#    _errstat
+#fi
+
+_arpstat
+_constat
+_cltportstat
+_portstat
+_dhcpstat
+_smbstat
+
+# ip neigh flush all > /dev/null
+
+

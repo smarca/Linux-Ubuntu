@@ -1,0 +1,10 @@
+#Emails Administrativos
+smarca@gmail.com		marca@monital.com.br : suporte@monital.com.br
+
+#Emails Internos Privilegiados
+no-reply@pmfi.pr.gov.br		nfe@monital.com.br 
+
+^.*@.*[.]noip[.]com		vm@monital.com.br : marca@monital.com.br
+
+#^.*@.*[.]noip[.]com		*@monital.com.br
+

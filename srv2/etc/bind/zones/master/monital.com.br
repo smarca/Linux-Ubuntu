@@ -1,0 +1,145 @@
+$TTL	12H
+;###########################################################################
+;#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+;###########################################################################
+;#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+;#  *  Informe ao autor sobre falhas ou incremento de funcoes            *  #
+;#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+;###########################################################################
+@ 	IN SOA srv2 suporte.metropol.com.br. (
+		2017112900 ; serial
+		1H  ; refresh
+		15M ; retry
+		7D  ; expire
+		1H  ; Negative Cache TTL
+	)
+			IN	A	177.220.156.178
+		 	IN	A	177.220.156.179
+			IN      NS      srv1
+			IN      NS      srv2
+			IN	MX	0	srv2
+;			IN	MX	1	srv1
+			IN	TXT	"v=spf1 mx a:srv1.metropol.com.br a:srv2.metropol.com.br include:_spf.smtplw.com -all"
+			IN 	SPF 	"v=spf1 mx a:srv1.metropol.com.br a:srv2.metropol.com.br include:_spf.smtplw.com -all"
+			IN	RP	Marca. suporte.metropol.com.br.
+$ORIGIN @
+
+;----------------------------------------------------------------------------
+;infomail   	        IN  TXT  "The email from %{s} using SMTP server at %{i} 
+;                     was rejected by %{c} (%{r}) at %{t} because it failed 
+;                     the SPF records check for the domain %{p}. 
+;                     Please visit http://www.metropol.com.br
+;                     for more information"
+
+;----------------------------------------------------------------------------
+                        ; https://support.google.com/a/answer/2466563?hl=en&ref_topic=2759254
+			; http://www.zytrax.com/books/dns/ch9/dmarc.html
+_dmarc      IN     TXT     "v=DMARC1; p=reject; sp=reject; pct=100"
+;_dmarc     IN     TXT     "v=DMARC1; adkim=s; aspf=s; rua=mailto:mailauth-reports@srv2.monital.com.br; p=none; fo=1; ruf=mailto:mailauth-reports@srv2.monital.com.br"
+;_dmarc     IN     TXT     "v=DMARC1; adkim=s; aspf=s; rua=mailto:mailauth-reports@srv2.monital.com.br; pct=100; p=quarantine; fo=1; ruf=mailto:mailauth-reports@srv2.monital.com.br"
+;_dmarc     IN     TXT     "v=DMARC1; adkim=s; aspf=s; rua=mailto:mailauth-reports@srv2.monital.com.br; p=reject; fo=1; ruf=mailto:mailauth-reports@srv2.monital.com.br"
+
+;----------------------------------------------------------------------------
+;# Servidores Principais
+$TTL	4H
+srv1			IN	A	177.220.156.178
+			IN	MX	0	srv1
+			IN	TXT	"v=spf1 mx a:srv1.metropol.com.br a:srv2.metropol.com.br -all"
+			IN 	SPF 	"v=spf1 mx a:srv1.metropol.com.br a:srv2.metropol.com.br -all"
+			IN	RP	Marca. suporte.metropol.com.br.
+
+$TTL	18H
+srv2			IN	A	177.220.156.179
+			IN	MX	0	srv2
+			IN	TXT	"v=spf1 mx a:srv1.metropol.com.br a:srv2.metropol.com.br include:_spf.locaweb.com.br -all"
+			IN 	SPF 	"v=spf1 mx a:srv1.metropol.com.br a:srv2.metropol.com.br include:_spf.locaweb.com.br -all"
+			IN	RP	Marca. suporte.metropol.com.br.
+
+$TTL	2H
+srv                     IN      A       177.220.156.178
+			IN      A       177.220.156.179
+vip                     IN      A       177.220.156.180
+;                       IN      A       177.220.156.178
+;                       IN      A       177.220.156.179
+cam                     IN      A       177.220.156.181
+voip                    IN      A       177.220.156.182
+
+sti                     IN      A       138.122.152.227
+;----------------------------------------------------------------------------
+;# Maquinas apelido pra servidor principal
+$TTL    1H
+www                     IN      CNAME   monital.hospedagemdesites.ws.
+home			IN	CNAME	@
+;boleto			IN	CNAME	@
+;cliente		IN	CNAME	@
+;clientes               IN      CNAME   @
+;----------------------------------------------------------------------------
+; smtp locaweb : smtplw.com.br : Porta: 587 | SSL/TLS: 465
+smtplw			IN	TXT	ebd932b4f43011ee3e6ae205c402300a
+envios			IN	CNAME	smtplw.com.
+;----------------------------------------------------------------------------
+$TTL    3H
+vm			IN	NS	ns1.no-ip.com.
+			IN	NS	ns2.no-ip.com.
+			IN	NS	ns3.no-ip.com.
+			IN	NS	ns4.no-ip.com.
+			IN	NS	ns5.no-ip.com.
+
+$TTL 	3H
+ntp                     IN      CNAME   srv2
+ssh1                    IN      CNAME   srv1
+ssh2                    IN      CNAME   srv2
+ssl1                    IN      CNAME   srv1
+ssl2                    IN      CNAME   srv2
+;painel                 IN      CNAME   srv2
+webmail                 IN      CNAME   srv2
+webmail2                IN      CNAME   srv1
+
+$TTL    1H
+stat1                   IN      CNAME   srv1
+stat2                   IN      CNAME   srv2
+traf1                   IN      CNAME   srv1
+traf2                   IN      CNAME   srv2
+;mkt                    IN      CNAME   srv2
+dvr                     IN      CNAME   srv2
+ddns                    IN      CNAME   srv2
+
+;----------------------------------------------------------------------------
+; host -t SRV _smtp._tcp.servidor.com.br
+$TTL    1H
+;Service.Proto.Name     IN      SRV     Pri(<maior)     Weight(>maior)  Port            Target
+_smtp._tcp              IN      SRV     0               0               25              srv2
+_ssmtp._tcp             IN      SRV     0               0               465             srv2
+_submission.tcp         IN      SRV     0               0               587             srv2
+_imap._tcp              IN      SRV     0               0               143             srv2
+_imaps._tcp             IN      SRV     0               0               993             srv2
+_pop3._tcp              IN      SRV     0               0               110             srv2
+_pop3s._tcp             IN      SRV     0               0               995             srv2
+mail                    IN      CNAME   srv2
+smtp                    IN      CNAME   srv2
+imap                    IN      CNAME   srv2
+pop                     IN      CNAME   srv2
+pop3                    IN      CNAME   srv2
+
+;----------------------------------------------------------------------------
+$TTL    1H
+_autodiscover._tcp      IN      SRV     0               0               443             srv2
+_autodiscover._tcp      IN      SRV     1               0               80              srv2
+autoconfig              IN      CNAME   srv2
+autodiscover            IN      CNAME   srv2
+
+;----------------------------------------------------------------------------
+;Configurar Modem Externamente
+$TTL    5M
+mdm1-srv1               IN      CNAME   srv1
+mdm2-srv1               IN      CNAME   srv1
+mdm3-srv1               IN      CNAME   srv1
+mdm1-srv2               IN      CNAME   srv2
+mdm2-srv2               IN      CNAME   srv2
+mdm3-srv2               IN      CNAME   srv2
+
+;----------------------------------------------------------------------------
+$TTL    6H
+_domainkey 14400 IN       TXT     "o=~; r=suporte@monital.com.br"
+cur._domainkey 14400 IN       TXT     "dk2017112900"
+dk2017112900._domainkey 14400 IN TXT ("v=DKIM1; k=rsa; dkim=discardable; g=*; p=""MIIBKDANBgkqhkiG9w0BAQEFAAOCARUAMIIBEAKCAQcAzsMTLeMb0RXKvmyWe4bB""xdpc9GZe4ffszQWU1jqvr6stYLg8Qq2WtKO9qikuMEwQBjbczuRwLlxsl2EOkBvt""g4aMOyL36YWCuIh8qCx5FJsz7EiPC02ORYWdg1nA7gfoAw7/4jWKTZU2+A3vZAUO""IYMTljCdPYv1ORw0+sLXCU2cav74cuLl3D2e4+7G3v3hnhHo6ikczeqCigLJd/Sn""mXbt3YT28EhYi9Qbs5VLe09ziFvoyLil3w2oKpFC3EeqeZMgTPv3GiUW/OkUWt/v""4jjQA1wsoVqA0zhIIoIIG+NIPnuEfmwlpcc8XHLQH2WU6FE4ZyrIX26764FU+P55""4s8QtLLA7wIDAQAB")

@@ -1,0 +1,11 @@
+###########################################################################
+#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe ao autor sobre falhas ou incremento de funcoes           *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+# ALL: some.host.name, .some.domain
+# ALL EXCEPT in.fingerd: other.host.name, .other.domain
+# ALL: ALL: spawn ( echo -e "Servidor ->\t %A\nDaemon   ->\t %d\t(%p)\nAtacante ->\t %a\t(%u)\n-----\n`host %A`\n-----\n`host %a`" | /bin/mail -s "Tentativa de Acesso -> %s" alerta) &
+ALL: ALL

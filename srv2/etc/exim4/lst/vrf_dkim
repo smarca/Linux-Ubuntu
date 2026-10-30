@@ -1,0 +1,8 @@
+# Obriga varificacao de SPF, caso o dominio informe dados a respeito
+
+*@gmail.com		Try to use the original Gmail or Google Site
+*@facebook.com		Only the original source Facebook is authorized
+*@facebookmail.com	Only the original source Facebook is authorized
+
+# #*@badoo.com		Try to use the original Badoo SMTP or Site
+# #*@uol.com.br		Try to use the original Uol SMTP or Site

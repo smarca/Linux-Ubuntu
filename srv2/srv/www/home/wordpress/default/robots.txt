@@ -1,0 +1,20 @@
+User-agent: *
+# Crawl-delay: 3
+Disallow: /*.js$ 
+Disallow: /*.inc$ 
+Disallow: /*.css$ 
+Disallow: /*.txt$
+Disallow: /*.pdf$
+Disallow: /*.xls$
+Disallow: /*.doc$
+Disallow: /*.gif$
+Disallow: /*.png$
+Disallow: /*.jpg$
+Disallow: /*.ico$
+Disallow: /*.zip$
+Disallow: /wp-admin/*
+
+User-agent: Googlebot-Image
+Disallow: /
+
+

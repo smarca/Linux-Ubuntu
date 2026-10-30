@@ -1,0 +1,40 @@
+#!/bin/bash
+#http://www.squidguard.org/blacklists.html
+#http://urlblacklist.com/?sec=download
+
+if [ ! -d ./blacklists ]; then
+    echo "Por favor efetuar download das blacklists em http://www.squidguard.org/blacklists.html e descompactar no diretorio 'blacklists'"
+    echo "O sub-diretorio 'blacklists' deve existir com o conteudo descompactado de http://www.squidguard.org/blacklists.html"
+    echo "Isto fara que algumas listas sejam apagadas ou reconstruidas..."
+    exit
+fi
+
+
+
+echo "Termino!"
+echo "Favor reinicie o squid e observe se existem alguns erros..."
+echo "  service squid stop"
+echo "  rm /var/log/squid3/cache.log"
+echo "  service squid start"
+echo "  ps aux | grep squid"
+echo "  cat /var/log/squid3/cache.log"
+
+
+#PORN
+echo -n " Diretorio adult/porn..."
+if [ -d ./blacklists/adult ]; then
+    cp -f ./blacklists/adult/domains            ./porn/domains  2> /dev/null
+    cat ./porn/domains.ini                   >> ./porn/domains  2> /dev/null
+    #cat ./blacklists/artnudes/domains        >> ./porn/domains  2> /dev/null
+    #cat ./blacklists/celebrity/domains       >> ./porn/domains  2> /dev/null
+    ./unrept                                    porn
+    echo "OK"
+else
+    echo "Falha! Diretorio ./blacklists/adult nao encontrado!"
+fi
+
+
+
+
+#rm -rf ./blacklists
+

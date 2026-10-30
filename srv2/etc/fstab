@@ -6,21 +6,20 @@
 #
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
 # / was on /dev/md0 during installation
-UUID=869365ab-14b7-45d0-a23e-b5e34a59282e /               ext4    errors=remount-ro  0       1
+UUID=869365ab-14b7-45d0-a23e-b5e34a59282e /               ext4    errors=remount-ro 0       1
 # /boot was on /dev/sda1 during installation
-/dev/sda1                                 /boot           ext4    errors=continue    0       2
+/dev/sda1                                 /boot           ext4    errors=continue  0       2
 # /boot2 was on /dev/sdb1 during installation
-/dev/sdb1                                 /boot2          ext4    errors=continue    0       2
+/dev/sdb1                                 /boot2          ext4    errors=continue 0       2
 # /boot3 was on /dev/sdc1 during installation
-/dev/sdc1                                 /boot3          ext4    errors=continue    0       2
+/dev/sdc1                                 /boot3          ext4    errors=continue 0       2
 # /srv was on /dev/md1 during installation
-UUID=0ecec4ff-01a1-465d-8da5-174c58b26132 /srv            ext4    defaults           0       3
+UUID=0ecec4ff-01a1-465d-8da5-174c58b26132 /srv            ext4    defaults        0       2
 # swap was on /dev/sda4 during installation
-UUID=ce0248d1-9f14-4e4f-89e8-f35f83c48fc4 none            swap    sw,errors=continue 0       0
+UUID=ce0248d1-9f14-4e4f-89e8-f35f83c48fc4 none            swap    sw              0       0
 # swap was on /dev/sdb4 during installation
-UUID=70e48b38-33ac-430e-ab8c-56dcc3a1bcbd none            swap    sw,errors=continue 0       0
+UUID=70e48b38-33ac-430e-ab8c-56dcc3a1bcbd none            swap    sw              0       0
 # swap was on /dev/sdc4 during installation
-UUID=88fad81a-99e9-406c-9279-8d0c3b3ecdfc none            swap    sw,errors=continue 0       0
-# Backup
-UUID=9866203e-487c-48f6-8a6b-dc4761e2aa9c /mnt/bkp        ext4    noauto  	     0       4
+UUID=88fad81a-99e9-406c-9279-8d0c3b3ecdfc none            swap    sw              0       0
 
+UUID=9866203e-487c-48f6-8a6b-dc4761e2aa9c /mnt/bkp        ext4    noauto  0       2

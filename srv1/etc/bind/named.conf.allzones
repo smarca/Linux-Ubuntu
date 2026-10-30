@@ -1,0 +1,7 @@
+//Dominio Silmar
+#zone "x.com.br" in {
+#    type master;
+#    file "/etc/bind/zones/master/x.com.br";
+#    allow-query { any; };
+#};
+

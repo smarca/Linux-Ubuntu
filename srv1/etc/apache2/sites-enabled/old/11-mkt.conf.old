@@ -1,0 +1,39 @@
+#mkt.metropol.com.br
+#useradd -g www-data -d /srv/www/home/mkt.metropol.com.br/ -m -s /bin/false -N mkt
+
+<Directory "/srv/www/home/mkt.metropol.com.br">
+    Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+    Require host .localnet .google.com
+    Require local
+    <IfModule mod_php5.c>
+        AddType application/x-httpd-php .php
+        php_admin_flag  engine             "On"
+        php_admin_flag  display_errors     "On"
+        php_admin_flag  safe_mode          "Off"
+        php_admin_value open_basedir       "/tmp:/tmp:/srv/www/home/mkt.metropol.com.br/"
+	php_admin_value user_dir           "/srv/www/home/mkt.metropol.com.br/www/"
+        php_admin_value error_log          "/tmp/phperr.mkt"
+        #php_admin_flag register_globals     On
+	php_admin_flag  safe_mode_gid       "On"
+    </IfModule>
+    AllowOverride FileInfo AuthConfig Limit Indexes
+    Options +FollowSymLinks -Indexes
+    #-- Rewrite
+    RewriteEngine On
+    RewriteCond %{HTTP_USER_AGENT}  !^.*(bot).*$   [NC]
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} !-f
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} !-d
+    # asf|asx|wax|wmv|wmx|avi|bmp|class|divx|doc|docx|exe|gif|gz|gzip|ico|jpg|jpeg|jpe|mdb|mid|midi|mov|qt|mp3|m4a|mp4|m4v|mpeg|mpg|mpe|mpp|odb|odc|odf|odg|odp|ods|odt|ogg|pdf|png|pot|pps|ppt|pptx|ra|ram|swf|tar|tif|tiff|wav|wma|wri|xla|xls|xlsx|xlt|xlw|zip
+    RewriteCond %{REQUEST_URI} !\.(?:gif|jpg|jpeg|jpe|png|js|ico|swf|tiff?)$ [NC]
+    RewriteRule ^(.*)$          http://%{HTTP_HOST}/erro.php?h=%{HTTP_HOST}&u=%{REQUEST_URI}&q=%{QUERY_STRING}&t=%{TIME}  [R=302,L]
+</Directory>
+<VirtualHost *:80>
+    ServerName    mkt.metropol.com.br
+    ServerAlias mkt.monital.com.br
+    ServerAdmin mkt@monital.com.br
+    DocumentRoot "/srv/www/home/mkt.metropol.com.br/www/"
+    php_admin_flag  safe_mode_gid               "On"
+    Alias /erro.php             "/srv/www/home/mkt.metropol.com.br/default/erro.php"
+    Alias /robots.txt           "/srv/www/home/mkt.metropol.com.br/default/robots.txt"
+    Alias /favicon.ico          "/srv/www/home/mkt.metropol.com.br/default/favicon.ico"
+</VirtualHost>

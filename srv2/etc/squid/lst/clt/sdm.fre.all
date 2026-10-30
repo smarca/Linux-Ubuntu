@@ -15,7 +15,7 @@ ger-.*[.]A[.]localnet           #Gerencia
 #adm-.*[.]A[.]localnet          #Administrativo
 #com-.*[.]A[.]localnet          #Comercial
 #opr-.*[.]A[.]localnet          #Operador
-cpd-.*[.]A[.]localnet           #CPD
+#cpd-.*[.]A[.]localnet          #CPD
 #ubuntu.A.localnet              #Instalador Ubuntu
 
 cpd-boleto.A.localnet           #Boleto CPD

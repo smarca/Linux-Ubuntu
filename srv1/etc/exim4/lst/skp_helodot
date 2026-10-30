@@ -1,0 +1,8 @@
+#Nao obriga que o host que envia tenha . no heloname
+
+*@folhadirigida.com.br
+*.folhadirigida.com.br
+*@campodedesafios.com.br
+*@raioxdanoite.com.br
+*@mabtec.com.br
+*@raioxgames.com.br

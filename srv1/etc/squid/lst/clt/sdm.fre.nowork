@@ -1,0 +1,9 @@
+localhost                       #LocalHost
+
+#[.]A[.]localnet                    #Rede A
+#[.]B[.]localnet                    #Rede B
+#[.]C[.]localnet                    #Rede C
+
+#-----------------------------------------------------------------------------
+
+

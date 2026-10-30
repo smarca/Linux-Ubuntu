@@ -1,0 +1,65 @@
+logging {
+    channel log_syslog {
+        syslog daemon;
+        severity dynamic;
+        print-severity yes;
+        print-category yes;
+        };
+    channel log_query {
+        file "/var/log/named/query.log" versions 5 size 30m;
+        severity dynamic;
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+    channel log_notifyupdate {
+        file "/var/log/named/notify+update.log" versions 5 size 30m;
+        severity dynamic;
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+    channel log_security {
+        file "/var/log/named/security.log" versions 5 size 30m;
+        severity dynamic;
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+    channel log_info {
+        file "/var/log/named/info.log" versions 5 size 30m;
+        severity dynamic;
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+    channel log_xfer {
+        file "/var/log/named/xfer.log" versions 5 size 30m;
+        severity dynamic;
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+    channel log_all {
+        file "/var/log/named/all.log" versions 5 size 30m;
+        severity dynamic;
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+    category general            { log_info; };
+    category xfer-in            { log_xfer; };
+    category xfer-out           { log_xfer; };
+    category dnssec             { log_security; };
+    category security           { log_security; };
+    category queries            { log_query; };
+    category update             { log_notifyupdate; };
+    category notify             { log_notifyupdate; };
+    category default            { log_all; log_syslog; };
+    category lame-servers       { null; };
+    category resolver           { null; };
+    category database           { null; };
+    category client             { null; };
+    category network            { null; };
+    category edns-disabled 	{ null; };
+};

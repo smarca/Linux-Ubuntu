@@ -1,0 +1,274 @@
+#!/bin/bash
+###########################################################################
+#     Feito por Silmar A. Marca     smarca@gmail.com                      #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe ao autor sobre falhas ou incremento de funcoes           *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+# smarca@gmail.com - extrair com tar -zxf --preserve backup.tar.gz
+# cd / ;  find . -xdev | cpio -pm /srv/bkp
+
+LANG=pt_BR
+LOGNAME=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+EMAIL=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+REPLYTO=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+MAILTO=alerta@`/bin/hostname`.`/bin/dnsdomainname`
+TMPDIR=/tmp
+MAILTO="renatomsouto@gmail.com" ; copiaerr=alerta@`/bin/hostname`.`/bin/dnsdomainname` ; copiaerr2=root@`/bin/hostname`.`/bin/dnsdomainname`
+export EMAIL REPLYTO MAILTO LOGNAME TMPDIR
+
+#Quais diretorios a fazer backup. Mascaras nao valem para iarq. Usar expressao regexp. Ex. (.*) para todos os tipos
+src[0]='/srv/smb/prog/sistema/*'
+iarq[0]='\(db*.*\)\|\(.*\(db[ft]\|txt\|add\|mdb\|set\|bak\|cfg\|csv\|dsc\|ldb\|set\|lck\|idx\|ibk\|dat\|blb\|bin\|dbk\|bbk\)\)'
+earq[0]='.ntx:.zip:.rar:.7z'
+dst[0]='/srv/smb/bkup/Suporte/'`/bin/hostname`'/bkp-prg/'
+prf[0]='_DAT'
+
+src[1]='/srv/smb/prog/sistema/*'
+iarq[1]='\(.*\(exe\|com\|wav\|jpg\|dll\|ini\|lnk\|url\)\)'
+earq[1]='.ntx:.zip:.rar:.7z'
+dst[1]='/srv/smb/bkup/Suporte/'`/bin/hostname`'/bkp-prg/'
+prf[1]='_PRG'
+
+src[2]='/srv/bd*/'
+iarq[2]='.*'
+earq[2]='.old'
+dst[2]='/srv/smb/bkup/Suporte/'`/bin/hostname`'/bkp-bd/'
+prf[2]='_BD'
+
+#src[3]='/srv/smb/prog/DLS/ARQUIVOS/*'
+#iarq[3]='\(.*\(add\|dsc\|mdb\|set\|ldb\|cfg\)\)'
+#earq[3]='.pdf:.zip:.rar:.7z'
+#dst[3]='/srv/smb/bkup/Suporte/'`/bin/hostname`'/bkp-dls/'
+#prf[3]='_dls'
+
+#Diretorios
+NOMELOG=bkpprog
+LOGDIR=/tmp/backup.${NOMELOG}.log
+Subject="ERR-BACKUP ${NOMELOG} "`/bin/hostname`" - "`/bin/date +%Y-%b-%d" "%T" "\(%a\)`" $*".
+
+RSEM=00				#Salva Backup da semana rotativo (WW - Domingo 00 a Sabado 06). Default: 00
+RMES=05				#Salva Backup do mes, sobrescrevendo (DD - 01 ao numero de dias do mes - recomendado maximmo 28). Default: 05
+RANO=25-12			#Salva Backup do ano, por tempo indeterminado (DDMM). Melhor se um ou mais dias depois do mensal. Default: 25-12
+LSEM=01				#Rotacionar arquivo de log do php, excluindo o antigo
+
+#--------------------------------------------------------------------------
+#Dias de historico de um dia da semana
+smin=1	#Minimo de 1
+smax=4	#Maximo de 9
+
+#Pega variaveis
+HORA=`date +%H`     		# Hora  : de 00 a 23
+DSEM=`date +0%w`    		# Semana: de 00 (Domingo), 01(Segunda) a 06 (Sabado)
+DIA=`date +%d`			# Dia   : 01 ao numero de dias
+MES=`date +%m`      		# Mes   : de 01 a 12
+ANO=`date +%Y`			# Ano   : 2011, 2012...
+PREFIX=`date +%Y-%m-%d_` 	# Prefixo do arquivo de backup
+
+#Apaga arquivo de erro antigo
+rm -f ${LOGDIR} 
+
+#PARTE 0: Verificar se todos diretorios existem
+for idir in ${src[@]}; do
+    if [ ! -d "$idir" -a ! -f "$idir" ]; then
+        logger -p cron.err -t ERRO BACKUP: Diretorio $idir inexistente. Nenhum backup feito na origem $idir 
+	echo													>> ${LOGDIR}
+	echo ====================================================================				>> ${LOGDIR}
+        echo ERRO BACKUP: Nenhum diretorio de origem foi encontrado para o backup solicitado.			>> ${LOGDIR}
+	echo Origem : $idir											>> ${LOGDIR}
+	echo 													>> ${LOGDIR}
+        echo Por favor verifique se o diretorio foi apagado da origem.						>> ${LOGDIR}
+        echo Retorne o diretorio, ou configure o backup para nao fazer mais copia deste diretorio.		>> ${LOGDIR}
+	echo													>> ${LOGDIR}
+    fi
+done
+
+#PARTE 1a: pre rotacionar .old semanal
+for (( i=0; i<${#src[@]}; i++ )); do # for item in "${src[@]}"; do
+  idst=${dst[$i]}/d/$DSEM/		#Diretorio backup inicial como sendo o do dia da semana
+  mv ${idst} ${dst[$i]}/d/${DSEM}.old 2> /dev/null #Renomeia o diretorio do dia pra .old
+done
+
+#Efetuar backup dos diretorios existentes
+#PARTE 1b: Fazer o backup, compactando...
+for (( i=0; i<${#src[@]}; i++ )); do # for item in "${src[@]}"; do
+  idst=${dst[$i]}/d/$DSEM/		#Diretorio backup inicial como sendo o do dia da semana
+  mkdir -p ${idst} ; cd ${idst}		#Cria e acessa o diretorio
+  # For split por nova linha, nao por palavras
+  default_IFS=$IFS
+  IFS="$(echo -e "\n\r")"
+  for isrc in `ls -1 -d -p ${src[$i]}/ 2> /dev/null | grep -v ${dst[$i]} | grep -v '.old/$' `; do
+    cd "`dirname "$isrc"`"			#Acessa diretorio anterior 
+    arq="`basename "$isrc"`"
+    dir="`dirname "$isrc"`"
+    # date > ${idst}/${arq}.log	#Cuidado.. modifica arquivos de log
+    find "./$arq" -iregex "${iarq[$i]}" -print  | zip -X ${idst}/${PREFIX}${arq}${prf[$i]}.zip -@ >> ${idst}/${arq}.log 2>> ${idst}/${arq}.log
+    err=$?
+    # date >> ${idst}/${arq}.log   	#Cuidado, modifica arquivos de log
+    if [ $err -eq 12 ]; then
+        logger -p cron.err -t ERRO BACKUP: Comando ZIP err $err: ${idst}/${PREFIX}${arq}${prf[$i]}.zip - $dir/$arq/
+	echo													>> ${LOGDIR}
+	echo ====================================================================				>> ${LOGDIR}
+        echo AVISO BACKUP: Comando ZIP nao encontrou os arquivos solicitados na origem.				>> ${LOGDIR}
+	echo Origem : $dir/$arq/										>> ${LOGDIR}
+	echo Mascara Inclusao: \'${iarq[$i]}\' 									>> ${LOGDIR}
+	echo Mascara Exclusao: \'${earq[$i]}\'									>> ${LOGDIR}
+	echo Destino: ${idst}/${PREFIX}${arq}${prf[$i]}.zip 							>> ${LOGDIR}
+	echo 													>> ${LOGDIR}
+	echo Efetuando por seguranca backup completo de todos os arquivos da origem, exceto exclusao...		>> ${LOGDIR}
+        echo Por favor verifique se a copia foi feita com seguranca no destino. 				>> ${LOGDIR}
+        echo --------------------------------------------------------------------				>> ${LOGDIR}
+        # date > ${idst}/${arq}.log
+        zip -X -rn ${earq[$i]} ${idst}/${PREFIX}${arq}${prf[$i]}.zip ./$arq/ >> ${idst}/${arq}.log 2>> ${idst}/${arq}.log
+        # date >> ${idst}/${arq}.log
+        cat ${idst}/${arq}.log											>> ${LOGDIR}
+	echo													>> ${LOGDIR}
+    elif [ ! $err -eq 0 ]; then
+        logger -p cron.err -t ERRO BACKUP: Comando ZIP err $err: ${idst}/${PREFIX}${arq}${prf[$i]}.zip - $dir/$arq/
+	echo													>> ${LOGDIR}
+	echo ====================================================================				>> ${LOGDIR}
+        echo ERRO BACKUP: Comando ZIP retornou erro numero $err ao compactar os arquivos solicitados na origem para o destino. 	>> ${LOGDIR}
+	echo Origem : $dir/$arq/										>> ${LOGDIR}
+	echo Mascara Inclusao: \'${iarq[$i]}\' 									>> ${LOGDIR}
+	echo Mascara Exclusao: \'${earq[$i]}\'									>> ${LOGDIR}
+	echo Destino: ${idst}/${PREFIX}${arq}${prf[$i]}.zip 							>> ${LOGDIR}
+	echo 													>> ${LOGDIR}
+        echo Por favor verifique a integridade da copia no destino.						>> ${LOGDIR}
+        echo Compare o conteudo gravado com a origem.								>> ${LOGDIR}
+        echo --------------------------------------------------------------------				>> ${LOGDIR}
+	cat ${idst}/${arq}.log											>> ${LOGDIR}
+	echo													>> ${LOGDIR}
+    fi
+    #Verifica se o arquivo .zip nao existe
+    if [ -f ${idst}/${PREFIX}${arq}${prf[$i]}.zip ]; then
+        logger -p cron.info -t Backup OK: Arquivo ${idst}/${PREFIX}${arq}${prf[$i]}.zip criado. Origem $dir/$arq/ 
+	rm ${idst}/*.old  2> /dev/null
+    else
+        logger -p cron.err -t ERRO BACKUP: Arquivo ${idst}/${PREFIX}${arq}${prf[$i]}.zip inexistente. Origem $dir/$arq/ 
+	echo													>> ${LOGDIR}
+	echo ====================================================================				>> ${LOGDIR}
+        echo ERRO BACKUP: Nenhum arquivo de backup ZIP foi encontrado no destino para o backup solicitado.	>> ${LOGDIR}
+	echo Origem : $dir/$arq/										>> ${LOGDIR}
+	echo Mascara Inclusao: \'${iarq[$i]}\' 									>> ${LOGDIR}
+	echo Mascara Exclusao: \'${earq[$i]}\'									>> ${LOGDIR}
+	echo Destino: ${idst}/${PREFIX}${arq}${prf[$i]}.zip							>> ${LOGDIR}
+	echo 													>> ${LOGDIR}
+        echo Por favor verifique o conteudo dos arquivos de log e a listagem dos documentos existentes na origem.	>> ${LOGDIR}
+        echo --------------------------------------------------------------------				>> ${LOGDIR}
+	cat ${idst}/${arq}.log											>> ${LOGDIR}
+	echo -													>> ${LOGDIR}
+	find "./$arq/" -printf "%t - %p\n"									>> ${LOGDIR}
+	echo													>> ${LOGDIR}
+    fi
+  done
+  # Restore default
+  IFS=$default_IFS
+done
+
+#PARTE 2: Renomear os diretorios, fazendo rotacao fingindo ser uma fita dat...
+for (( i=0; i<${#dst[@]}; i++ )); do # for item in "${src[@]}"; do
+    #Criar e acessar
+    mkdir -p ${dst[$i]} ; cd ${dst[$i]}	
+    #[Remove OLD se existir o diario se existir arquivos no diretorio diario]
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d/$DSEM/  2>/dev/null >/dev/null
+    if [ -d ${dst[$i]}/d/$DSEM/ ]; then 
+	rm -rf ${dst[$i]}/d/${DSEM}.old 2>/dev/null >/dev/null
+    fi
+    #Remove arquivos duplicados
+    fdupes -fqrdN ${dst[$i]} 2>/dev/null >/dev/null
+    #find ${dst[$i]}/m/ -ctime +500 -mtime 500 -type f -exec rm -f {} \;	  #Apaga arquivos muito estranhos e antigos
+    #Remove os diretorios correntes caso estejam vazios, ou seja, em caso de erro. Tentativa 1
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d/$DSEM/  2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/m/$MES/   2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/a/$ANO/   2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d         2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/m         2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/a         2>/dev/null >/dev/null
+
+
+    #[Rotacionar anual]
+    if [ "${DIA}-${MES}" == "$RANO" -o ! -d ${dst[$i]}/a/$ANO/ ]; then
+      if [ -d ${dst[$i]}/d/$DSEM/ ]; then                         #Se mesmo assim, o diretorio existir e ele nao estiver vazio
+  	  rm -rf ${dst[$i]}/a/$ANO/ 2>/dev/null >/dev/null        #     Remove ano se ja existe anteriormente
+	  mkdir -p ${dst[$i]}/a/ ; mv ${dst[$i]}/d/$DSEM/ ${dst[$i]}/a/$ANO/                 #     Salva backup anual
+      elif [ -d ${dst[$i]}/d/$[$DSEM-1]/ ]; then                  #Se nao existir o do dia, tenta o do dia anterior
+  	  rm -rf ${dst[$i]}/a/$ANO/ 2>/dev/null >/dev/null        #     Remove ano se ja existe anteriormente
+  	  mkdir -p ${dst[$i]}/a/ ; mv ${dst[$i]}/d/$[$DSEM-1]/ ${dst[$i]}/a/$ANO/  	      #	    Guarda no diretorio do mes corrente
+      elif [ -d ${dst[$i]}/s/$smin/ ]; then			      #Se nao existir o diario, arquiva o semanal mais recente
+  	  rm -rf ${dst[$i]}/a/$ANO/ 2>/dev/null >/dev/null        #     Remove ano se ja existe anteriormente
+          mkdir -p ${dst[$i]}/a/ ; mv ${dst[$i]}/s/$smin/ ${dst[$i]}/a/$ANO/                 #     Salva backup anual
+      elif [ -d ${dst[$i]}/m/$MES/ ]; then			      #Se nao existir o semanal, arquiva o mensal mais recente
+      	  rm -rf ${dst[$i]}/a/$ANO/ 2>/dev/null >/dev/null        #     Remove ano se ja existe anteriormente
+          mkdir -p ${dst[$i]}/a/ ; mv ${dst[$i]}/m/$MES/ ${dst[$i]}/a/$ANO/                  #     Salva backup anual
+      fi
+    fi
+
+    #[Rotacionar mensal]
+    if [ $DIA -eq $RMES -o ! -d ${dst[$i]}/m/$MES/ ]; then
+      if [ -d ${dst[$i]}/d/$DSEM/ ]; then                             #Se mesmo assim, o diretorio existir e ele nao estiver vazio
+  	  rm -rf ${dst[$i]}/m/$MES/ 2>/dev/null >/dev/null         	  #	Remove mes anterior
+	  mkdir -p ${dst[$i]}/m/ ; mv ${dst[$i]}/d/$DSEM/ ${dst[$i]}/m/$MES/			  #	Guarda no diretorio do mes corrente
+      elif [ -d ${dst[$i]}/d/$[$DSEM-1]/ ]; then                      #Se nao existir o do dia, tenta o do dia anterior
+	  rm -rf ${dst[$i]}/m/$MES/ 2>/dev/null >/dev/null         	  #	Remove mes anterior
+	  mkdir -p ${dst[$i]}/m/ ; mv ${dst[$i]}/d/$[$DSEM-1]/ ${dst[$i]}/m/$MES/		  #	Guarda no diretorio do mes corrente
+      elif [ -d ${dst[$i]}/d/$[$DSEM+1]/ ]; then                      #Se nao existir o do dia, tenta o do dia posterior
+	  rm -rf ${dst[$i]}/m/$MES/ 2>/dev/null >/dev/null         	  #	Remove mes anterior
+	  mkdir -p ${dst[$i]}/m/ ; mv ${dst[$i]}/d/$[$DSEM+1]/ ${dst[$i]}/m/$MES/		  #	Guarda no diretorio do mes corrente
+      elif [ -d ${dst[$i]}/s/$smin/ ]; then		    	          #Se nao existir o diario, arquiva o semanal mais recente
+	  rm -rf ${dst[$i]}/m/$MES/ 2>/dev/null >/dev/null         	  #	Remove mes anterior
+          mkdir -p ${dst[$i]}/m/ ; mv ${dst[$i]}/s/$smin/ ${dst[$i]}/m/$MES/                     #     Salva backup anual
+      fi
+    fi
+
+    #[Rotacionar semanais]
+    #Renomear por semana os arquivos, fazendo com que a semana smin seja a mais recente e a smax a ultima
+    if [ $DSEM -eq $RSEM ]; then
+      if [ -d ${dst[$i]}/d/$DSEM/ ]; then				  #Se mesmo assim, o diretorio existir e ele nao estiver vazio
+  	  if [ -d ${dst[$i]}/s/$[$smax+1] ]; then			  #	Se o backup smax existir
+  	      if [ -d ${dst[$i]}/s/$[$smax] ]; then			  #		Se o mes anterior ao mes maior que smax existir
+		  rm -rf ${dst[$i]}/s/$[$smax+1]			  #			Remove ultima semana
+	      fi
+	  fi
+	  for s in `seq $smax -1 $smin`; do			  #Para todas as semanas, renomear
+	      if [ -d ${dst[$i]}/s/${s}/ ]; then			  #	Se o diretorio x existe
+		  rmdir --ignore-fail-on-non-empty ${dst[$i]}/s/${s}/ #		Tenta remover ele	
+	      fi
+	      if [ $s -eq $smin -a -d ${dst[$i]}/s/${s}/ ]; then	  #	Se mesmo assim, o primeiro diretorio existir e ele nao estiver vazio
+		  mkdir -p ${dst[$i]}/s/ ; mv ${dst[$i]}/s/${s}/ ${dst[$i]}/s/$[$s+1]/	  	  #		Renomeia de n para n+1 fazendo com que ele fique mais antigo	
+	      elif [ $s -gt $smin -a -d ${dst[$i]}/s/${s}/ -a -d ${dst[$i]}/s/${smin} ]; then	  #	Se mesmo assim, os proximos diretorios existir e ele nao estiver vazio
+		  mkdir -p ${dst[$i]}/s/ ; mv ${dst[$i]}/s/${s}/ ${dst[$i]}/s/$[$s+1]/	  	  #		Renomeia de n para n+1 fazendo com que ele fique mais antigo	
+	      fi
+	  done  
+          rm -f ${dst[$i]}/d/$DSEM/*.old 2>/dev/null >/dev/null	  #Remove arquivos old, nao sao mais necessarios nas fitas guardadas
+	  if [ -d ${dst[$i]}/d/$DSEM ]; then
+    		 mkdir -p ${dst[$i]}/s/ ; mv ${dst[$i]}/d/$DSEM/ ${dst[$i]}/s/$smin/  #Renomeia o arquivo do dia e arquiva ele
+	  fi
+      fi
+    fi
+
+    #Lista arquivos duplicados
+    #find -not -empty -type f -printf "%s\n" | sort -rn | uniq -d | xargs -I{} -n1 find -type f -size {}c -print0 | xargs -0 md5sum | sort | uniq -w32 --all-repeated=separate
+    #fdupes -r -1 .
+
+    #Remove os diretorios correntes caso estejam vazios, ou seja, em caso de erro. Tentativa 1
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d/$DSEM/  2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/m/$MES/   2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/a/$ANO/   2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d         2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/m         2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/a         2>/dev/null >/dev/null
+  done
+
+#Email em caso de erro
+if [ -f ${LOGDIR} ]; then
+    echo                                                                                                    >> ${LOGDIR}
+    echo ====================================================================                               >> ${LOGDIR}
+    echo Status Estacoes: Equipamentos ligados                                                              >> ${LOGDIR}
+    smbtree --no-pass                                                                                       >> ${LOGDIR}
+    echo ====================================================================                               >> ${LOGDIR}
+    echo Status Servidor de Arquivos: Arquivos abertos no momento e usuarios conectados.                    >> ${LOGDIR}
+    smbstatus                                                                                               >> ${LOGDIR}
+    cat ${LOGDIR} | /usr/bin/mutt -a ${LOGDIR} -s "$Subject" -b $copiaerr -c $copiaerr2 -- $MAILTO
+fi
+

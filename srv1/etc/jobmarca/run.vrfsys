@@ -1,0 +1,238 @@
+#!/bin/bash
+
+###########################################################################
+#     Feito por Silmar A. Marca     smarca@gmail.com                      #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe ao autor sobre falhas ou incremento de funcoes           *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+
+LANG=pt_BR
+
+#Definir emails
+LOGNAME=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+EMAIL=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+REPLYTO=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+MAILTO=alerta@`/bin/hostname`.`/bin/dnsdomainname`
+TMPDIR=/tmp
+MAILTO="renatomsouto@gmail.com" ; CopyTo="renatomsouto@gmail.com" ; copiaerr=alerta@`/bin/hostname`.`/bin/dnsdomainname` 
+export EMAIL REPLYTO MAILTO LOGNAME TMPDIR
+
+LST_MD="/dev/md?"			#/dev/md?
+LST_HD="/dev/sd?"			#/dev/sg0 /dev/sg1 ou /dev/sd? - opcional opcao -d scsi
+#NUM_LSI=2                               #Dispositivos tipo LSI #mpt-status -p
+
+#-------------------------------------------------------------------------------
+#Pega variaveis
+MINU=`date +%M`                 # Hora  : de 00 a 59
+HORA=`date +%H`                 # Hora  : de 00 a 23
+DSEM=`date +0%w`                # Semana: de 00 (Domingo), 01(Segunda) a 06 (Sabado)
+WMES=`echo $((((7+$(date +%d|sed 's/^0*//')))/7))` #Semana do mes de 1 a 5
+DIA=`date +%d`                  # Dia   : 01 ao numero de dias
+MES=`date +%m`                  # Mes   : de 01 a 12
+ANO=`date +%Y`                  # Ano   : 2011, 2012...
+
+#Reenvia mensagem mesmo se enviada anteriormente as 7 horas da manha de segunda feira
+if [ $HORA -eq 7 -a $DSEM -eq 1 ]; then
+  rm -f /tmp/hdd-err_*
+fi
+
+#Varias Opcoes aqui
+for hds in $LST_SD; do
+    #Habilitar Flags todos os dias no final da tarde!
+    if [ $HORA -ge 21 ]; then
+	/usr/sbin/smartctl --smart=on --offlineauto=on --saveauto=on $hds 2> /dev/null> /dev/null 
+    fi
+    #Teste Curto Obrigatorio todos os dias.
+    if [ $HORA -eq 20 ]; then
+        /usr/sbin/smartctl -t short -q silent $hds
+    fi
+    #Teste Rapido Obrigatorio toda semana
+    if [ $HORA -eq 6 -a $DSEM -eq 1 ]; then
+        /usr/sbin/smartctl -t conveyance -q silent $hds
+    fi
+    #Teste Longo Obrigatorio Final de Semana madrugada, primeira semana do mes apenas
+    if [ $HORA -eq 2 -a $DSEM -eq 0 -a $WMES -eq 1 ]; then
+        /usr/sbin/smartctl -t long -q silent $hds    
+    fi
+done
+
+#Erro de mirror
+err_mdm=0
+if [ ! -z "$LST_MD" ]; then
+  for hds in $LST_MD; do
+    /sbin/mdadm --query --detail --test $hds 2> /dev/null> /dev/null
+    if [ $? -ne 0 ]; then
+      err_mdm=1
+    fi
+  done 
+fi
+
+#Erro LSI
+if [ ! -z "$NUM_LSI" ]; then
+    #Detectar: mpt-status -p # http://hwraid.le-vert.net/wiki/LSIFusionMPT
+    #mpt-status -i 0
+    /usr/sbin/mpt-status -i 0 | grep -i -q "OPTIMAL"
+    if [ $? -ne 0 -o `/usr/sbin/mpt-status -i 0 | grep -i "ONLINE" | wc -l` -ne 2 ]; then
+        err_mdm=1
+    fi
+fi
+
+#Remover erro se nao existir
+if [ $err_mdm -eq 0 ]; then
+    rm -f /tmp/hdd-err_mdm_*
+fi
+
+#Erro de Smart
+err_smart=0
+for hds in $LST_SD; do
+  /usr/sbin/smartctl -q silent -a $hds
+  if [ $? -ne 0 ]; then
+    err_smart=1
+  fi
+done
+if [ $err_smart -eq 0 ]; then
+    rm -f /tmp/hdd-err_smart_*
+fi
+
+#Remove todos os logs se tiver sem erro algum
+if [ $err_mdm -eq 0 -a $err_smart -eq 0 ]; then
+    rm -f /tmp/hdd-*
+fi
+#Sai se ja avisou por email
+if [ -f /tmp/hdd-err_mail_hassend ]; then
+    exit
+fi
+
+#Verifica status do raid
+if [ $err_mdm -ne 0 ]; then
+  Subject="* !!! Problemas com o servidor `hostname` - ESPELHAMENTO !!! *"
+  echo -e "
+     $Subject\n\n\
+       O espelhamento de disco do servidor `hostname -f`, ip `hostname -i` esta comprometido. [ err $err_mdm ]
+       Favor, no proximo dia util, contacte o administrador informando a situacao.
+   
+       O SERVIDOR POSSUI AGORA APENAS AO MENOS UM HD COM PROBLEMAS. MAS NAO SE DESESPERE: 
+        1 - O servidor tinha mais de um hd funcionando. Um deles queimou e parou, mas o hd espelho ainda continua funcionando.
+            Os HDs nao costumam queimar, logo com calma, avise o administrador sobre esta mensagem e estado do servidor no proximo dia util.
+        2 - Se o administrador nao foi avisado, procure nao reiniciar o servidor. Ele podera nao ligar!!! Se ele for reiniciado podera sera necessario
+            a senha do administrador ou instrucoes adicionais para colocar ele em funcionamento novamente.
+        3 - Como ele continua funcionando e continuara funcionando pois ainda tem ao menos 1 hd ativo, avise os usuarios para que
+            nao reiniciem o servidor `hostname -s` e por seguranca efetue backup de todos os dados.
+     " > /tmp/hdd-err_msg_mdm
+fi
+
+if [ $err_smart -ne 0 ]; then
+       Subject="* !!! Problemas com o servidor `hostname` - SMART SELF TEST !!! *"
+       echo -e "
+       $Subject\n\n\
+         O auto-teste de disco SMART do servidor `hostname -f`, ip `hostname -i` detectou problemas. [ err $err_smart ]
+         Favor, no proximo dia util, contacte o administrador informando a situacao.
+
+       O SERVIDOR POSSUI AGORA APENAS AO MENOS UM HD COM PROBLEMAS. MAS NAO SE DESESPERE: 
+        1 - O servidor tinha mais de um hd funcionando. Um deles esta com mau funcionamento, mas o hd espelho ainda continua funcionando.
+            Os HDs nao costumam queimar, logo com calma, avise o administrador sobre esta mensagem e estado do servidor no proximo dia util.
+        2 - Se o administrador nao foi avisado, procure nao reiniciar o servidor. Ele podera nao ligar!!! Se ele for reiniciado podera sera necessario
+            a senha do administrador ou instrucoes adicionais para colocar ele em funcionamento novamente.
+        3 - Como ele continua funcionando e continuara funcionando pois ainda tem ao menos 1 hd ativo, avise os usuarios para que
+            nao reiniciem o servidor `hostname -s` e por seguranca efetue backup de todos os dados.
+       " > /tmp/hdd-err_msg_smart
+fi
+
+if [ $err_mdm -ne 0 -o $err_smart -ne 0 ]; then
+     echo -e "-----------------------------------------------------------------------------------------" > /tmp/hdd-err_msg
+     echo -e "
+     Esta mensgem continuara a ser enviada periodicamente, a menos que o administrador do sistema efetue a manutencao do servidor, 
+     reespelhando o hd e verificando se eh necessario trocar o HD. Caso ele tenha verificado e solicitado a troca do mesmo, por favor
+     efetue a troca o quanto antes OK? Enquanto isto efetue os backups diariamente!
+
+     Este email foi enviado para $CopyTo com copia para $MAILTO em `date`.
+     " >> /tmp/hdd-err_msg
+     echo -e "-----------------------------------------------------------------------------------------" >> /tmp/hdd-err_msg
+     /usr/bin/uptime >> /tmp/hdd-err_msg 2>> /tmp/hdd-err_msg
+     echo -e "-----------------------------------------------------------------------------------------" >> /tmp/hdd-err_msg
+     if [ ! -z "$LST_MD" ]; then
+        cat /proc/mdstat >> /tmp/hdd-err_msg 2>> /tmp/hdd-err_msg
+        echo -e "-----------------------------------------------------------------------------------------" >> /tmp/hdd-err_msg
+        /sbin/mdadm --query --detail /dev/md* 2> /dev/null >> /tmp/hdd-err_msg
+        echo -e "-----------------------------------------------------------------------------------------" >> /tmp/hdd-err_msg
+     fi
+     if [ ! -z "$NUM_LSI" ]; then
+        #Detectar: mpt-status -p # http://hwraid.le-vert.net/wiki/LSIFusionMPT
+        #mpt-status -i 0
+        /usr/sbin/mpt-status -i 0 2> /dev/null >> /tmp/hdd-err_msg
+        echo -e "-----------------------------------------------------------------------------------------" >> /tmp/hdd-err_msg
+     fi
+
+     landscape-sysinfo  | grep -v landscape  >> /tmp/hdd-err_msg
+     echo -e "-----------------------------------------------------------------------------------------" >> /tmp/hdd-err_msg
+     for hds in $LST_HD; do
+        echo -e "***** [ $hds ]" >> /tmp/hdd-err_msg
+	/usr/sbin/smartctl -q errorsonly --info -H --all $hds >> /tmp/hdd-err_msg 2>> /tmp/hdd-err_msg
+	echo -e "-" >> /tmp/hdd-err_msg
+        /usr/sbin/smartctl --info -H -l xselftest -l xerror $hds  | egrep -v "(smartctl|Copyright)" >> /tmp/hdd-err_msg 2>> /tmp/hdd-err_msg
+        echo -e "-------" >> /tmp/hdd-err_msg
+     done
+
+     #Enviar email agora se o arquivo de erro foi criado nesta execucao
+     #Assunto do email
+     if [ -z "$Subject" ]; then
+        Subject="* !!! Problemas com o servidor `hostname` !!! *"
+     fi
+     #Enviar mensagem contendo informacoes e anexos
+     cat /tmp/hdd-err_msg_* /tmp/hdd-err_msg | /usr/bin/mutt -s "$Subject" -b $copiaerr -c $CopyTo -- $MAILTO
+     touch /tmp/hdd-err_mail_hassend
+fi
+
+exit
+
+
+
+#-------------------------------------
+# https://raid.wiki.kernel.org/index.php/Growing
+# [Em caso de falhas]
+# Setar como falhado em caso de defeito		: /sbin/mdadm --manage /dev/md0 --fail /dev/sdb2
+# Remover driver com falha			: /sbin/mdadm --manage /dev/md0 --remove /dev/sdb2
+# Adicionar driver novamente			: /sbin/mdadm --manage /dev/md0 --add /dev/sdb2
+# Mudar Numero de Dispositivos			: /sbin/mdadm --grow --raid-devices=3 /dev/md0
+#
+# [Extender]
+# /sbin/mdadm -f /dev/md0 /dev/sdd1
+# /sbin/mdadm -r /dev/md0 /dev/sdd1
+# /sbin/mdadm --grow /dev/md0 --size=max
+#
+# [Criacao]
+# Criar Raid 1 					: /sbin/mdadm --create /dev/md0 --level=mirror --raid-devices=2 /dev/sda2 /dev/sdb2
+# Criar Raid 1 sem um dos discos		: /sbin/mdadm --create /dev/md0 --level=mirror --raid-disks=2 missing /dev/sdb2
+# Criar Raid 1 sem um dos discos		: /sbin/mdadm --create /dev/md0 --level=mirror --raid-disks=2 /dev/sda2 missing
+# Criar Raid 5 					: /sbin/mdadm --create /dev/md1 --level=5 --raid-devices=3 /dev/sda3 /dev/sdb3 /dev/sdc3
+# Listar					: /sbin/mdadm --examine --scan
+#
+# [Trocar HD UUID]
+# Verificar UUID				: blkid
+# Trocar UUID					: tune2fs /dev/sda1 -U {uuid} 
+# Trocar LABEL					: tune2fs /dev/sda1 -L BOOT1 ; tune2fs /dev/sdb1 -L BOOT2 ; tune2fs /dev/md0 -L DADOS
+#
+# [Grub]
+# Display Grub New CFG				: grub-mkconfig
+# Update Grub 					: update-grub
+# Instalar Grub					: grub-install /dev/sda ; grub-install /dev/sdb
+#
+# [Fstab]
+# UUID=xxxx /boot2 ext4 defaults,nobootwait 0 2
+#
+# martctl --test=long /dev/sdb
+# /sbin/mdadm --query --detail /dev/md0
+# Ver particoes 1 : sfdisk -d /dev/sda
+# Ver particoes 2 : fdisk -l /dev/sda /dev/sdb
+# Copiar particoes CUIDADO : sfdisk -d /dev/sda | sfdisk /dev/sdb
+#
+#
+#
+# [SWAP]
+# mkswap /dev/sdb3
+#
+#
+#
+#

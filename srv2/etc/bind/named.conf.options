@@ -111,18 +111,13 @@ options {
         recursive-clients 50;    //Clientes Simultaneos (default 1000)
 	max-journal-size 50k;
 	interface-interval 5;
-        #rrset-order {
-	#    class ANY type ANY name "monital.com.br" order fixed;
-	#    #order cyclic;
-	#    #class ANY type ANY name "a.localnet" order cyclic; 
-	#    #class ANY type ANY name "*" order random;
-	#    #class ANY type ANY name "monital.com.br" order cyclic; 
-	#    #class ANY type A   name "monital.com.br" order fixed; 
-	#    #class ANY type ANY name "metropol.com.br" order cyclic; 
-	#    #class ANY type A   name "metropol.com.br" order fixed; 
-	#    #class ANY type ANY name "monital.net.br" order cyclic; 
-	#    #class ANY type A   name "monital.com.br" order fixed; 
-	#};
+        rrset-order {
+	    class ANY type ANY name "monital.com.br" order cyclic; 
+	    class ANY type ANY name "metropol.com.br" order cyclic; 
+	    class ANY type ANY name "monital.net.br" order cyclic; 
+	    class ANY type ANY name "a.localnet" order cyclic; 
+	    class ANY type ANY name "*" order random;
+	};
         rate-limit {
             responses-per-second 5;
             window 5;

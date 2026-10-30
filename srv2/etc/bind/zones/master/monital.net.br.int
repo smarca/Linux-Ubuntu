@@ -7,7 +7,7 @@ $TTL	12H
 ;#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
 ;###########################################################################
 @ 	IN SOA srv2 suporte.metropol.com.br. (
-		2017112900 ; serial
+		2017040603 ; serial
 		1H  ; refresh
 		15M ; retry
 		7D  ; expire
@@ -118,5 +118,5 @@ mdm3-srv2		IN	CNAME	srv2
 
 ;----------------------------------------------------------------------------
 ;$TTL	6H
-cur._domainkey 14400 IN       TXT     "dk2017112900"
-dk2017112900._domainkey 14400 IN TXT ("v=DKIM1; k=rsa; dkim=discardable; g=*; p=""MIIBKDANBgkqhkiG9w0BAQEFAAOCARUAMIIBEAKCAQcAuy6kkmPqckLoqQ7eT8hi""gAvhGIOeHeVaiHybVPnwWrA3CVF8ubbhsxhhrzX6V9bXvQXKDwvP8hhWAwN+sfZ7""OSFA1t9IKwfw5nLEL5WefZjuNM7fzTMffYhMlGDsqBZPT2zL7OFHw+w552pllYVj""qp5W073WIQfE93BePkVspZQhhepkAOrOp+Drq79KML6bV6+OwVnT93TICjIEiHFZ""cEUbeRiZEcGckKky7zjZ/yZzqtn4RcPFUeX4tAQ8vbgFLF53V/NB9JLzzmbG0DND""hTK5iJ04RLRx3NGamUdDN5xeKATKPYKUNM+zuemskhhY4vbBDhxvAn7aPS4oCooS""m0Er4nJHOQIDAQAB")
+cur._domainkey 14400 IN       TXT     "dk2017040600"
+dk2017040600._domainkey 14400 IN TXT ("v=DKIM1; k=rsa; dkim=discardable; g=*; p=""MIIBKDANBgkqhkiG9w0BAQEFAAOCARUAMIIBEAKCAQcAuLIb70aytRCsDBnGDlka""3wfbEMW+prlxNKbLYRYXGan885wG6IzIgqyQLrmFROyFXNQUGYl8vyu+JooPkL7j""/GEYCpmU8F7UcYnIwNkYQUp9kgU3TqsqNXS67ZxwYQoE8xkLZ6zmZmxARw6A5tfe""M909DnZb+rgLuq366ZQysce7kT/bSnXmbakfDS+/Ne5QEaObCxe5imnIjv8noeMw""XDomzsujcTyYoNZ4IxvVf0eKt97ykucB5/RVTsqYlUrcbWHZONYNdRObJ/5UXtgh""OW+uFHmvNk0PHpoP6TlrXk7H50J1MaZ+mqhQV3BGz9RjzIacGZcNoeDbiFXN8PCi""9Vm15UIrfQIDAQAB")

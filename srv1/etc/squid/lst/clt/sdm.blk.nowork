@@ -1,0 +1,16 @@
+[.]BLK[.]localnet                     #Rede com Bloqueios
+
+#[.]A[.]localnet                      #Rede A
+#[.]B[.]localnet                      #Rede B
+#[.]C[.]localnet                      #Rede C
+
+#-----------------------------------------------------------------------------
+opr.*				#Operador
+
+#fix-.*[.]A[.]localnet          #Fixos IPs ou Hardware
+#dir-.*[.]A[.]localnet          #Diretoria
+#ger-.*[.]A[.]localnet          #Gerencia
+#adm-.*[.]A[.]localnet          #Administrativo
+#com-.*[.]A[.]localnet          #Comercial
+#opr-.*[.]A[.]localnet          #Operador
+#cpd-.*[.]A[.]localnet          #CPD

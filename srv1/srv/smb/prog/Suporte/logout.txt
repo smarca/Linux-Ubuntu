@@ -1,0 +1,6 @@
+@echo off 
+cmdkey /list
+rem * Painel de Controle\Contas de Usuário\Gerenciador de Credenciais *
+pause
+net use * /DELETE
+rundll32.exe keymgr.dll,KRShowKeyMgr

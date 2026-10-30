@@ -1,0 +1,66 @@
+#!/bin/bash
+#http://www.squidguard.org/blacklists.html
+#http://urlblacklist.com/?sec=download
+
+#Converter arquivos
+unix2dos $1/* 2> /dev/null
+dos2unix $1/* 2> /dev/null
+
+# Expressoes: Eliminar sub palavras das palavras
+#if [ -f $1/expressions ]; then
+# cat $1/expressions 			 | egrep -v "^(\\s)*$" | sort | uniq 	> $1/expressions.new 		; mv -f $1/expressions.new $1/expressions
+# for exp in `cat $1/expressions`; do
+#   nexp=`cat $1/expressions | grep "$exp" | wc -l`
+#   if [ $nexp -gt 1  ]; then
+#     cat $1/expressions | egrep -v "$exp"  > $1/expressions.new 		
+#     echo $exp >> $1/expressions.new
+#     mv -f $1/expressions.new $1/expressions
+#   fi
+# done
+#fi
+
+if [ -f $1/domains.fix ]; then
+    cat $1/domains.fix >> $1/domains
+fi
+
+if [ -f $1/domains ]; then
+    cat $1/domains | sed 's/^www//' > $1/domains.new        ; mv -f $1/domains.new $1/domains
+    #Filtrar IPS
+    mv $1/ip $1/ip.new 2> /dev/null 
+    cat $1/domains | egrep -i '^(([0-9]{1,3}[.]){3}([0-9]{1,3}))([/]([0-9]{1,2}))?$' | \
+		gawk -F "." '{ print $1"."$2"."$3".0/24"; }' | sort -t . -k 1,1n -k 2,2n -k 3,3n -k 4,4n | uniq >> $1/ip.new          ; mv -f $1/ip.new $1/ip
+    cat $1/domains | egrep -i -v '^(([0-9]{1,3}[.]){3}([0-9]{1,3}))([/]([0-9]{1,2}))?$' | sort | uniq > $1/domains.new ; mv -f $1/domains.new $1/domains
+
+    # DOMINIO: Filtrar palavras 
+    if [ -f $1/domains -a -f $1/expressions ]; then
+	fgrep -v -i -f $1/expressions $1/domains | egrep -v "^(\\s)*$" | sort | uniq 	> $1/domains.new 		; mv -f $1/domains.new $1/domains
+    fi
+
+    # DOMINIO: Arquivos somente com dominios
+    cat $1/domains | egrep -v -i "[0-9]*[.][0-9]*[.][0-9]*[.][0-9]*" 		> $1/domains.new		; mv -f $1/domains.new $1/domains
+    cat $1/domains | egrep -v -i "[.][0-9]" 					> $1/domains.new		; mv -f $1/domains.new $1/domains
+    cat $1/domains | egrep -v -i "[0-9]." 					> $1/domains.new		; mv -f $1/domains.new $1/domains
+    cat $1/domains | egrep -v -i "[0-9]-[0-9]" 					> $1/domains.new		; mv -f $1/domains.new $1/domains
+
+    # Colocar Pontos onde Falta no dominio
+    cat $1/domains | gawk -F " " '{ 
+	if ((substr($1,1,1) == ".") || (substr($1,1,1) == "#") || (substr($1,1,1) == " ")) print $1; 
+	else		           print "."$1;
+        fi
+    }' | sort | uniq    > $1/domains.new		; mv -f $1/domains.new $1/domains
+
+fi
+rm -f $1/urls
+
+
+# DOMINIO: Filtrar ip em outro arquivo
+#cat $1/domains | egrep -i "^[0-9]*[.][0-9]*[.][0-9]*[.][0-9]*$" > $1/ip.new		; mv -f $1/ip.new $1/ip
+#sed -e 's/\(.*[.]\)\(.*[.]\)\(.*[.]\)\(.*\)/\1\2\30\/24/' < $1/ip > $1/ip.new		; mv -f $1/ip.new $1/ip	
+#sort -o $1/ip.new $1/ip								; mv -f $1/ip.new $1/ip
+#uniq $1/ip $1/ip.new									; mv -f $1/ip.new $1/ip
+
+# URL: Filtrar palavras 
+#fgrep -v -i -f $1/expressions $1/urls > $1/urls.new					; mv -f $1/urls.new $1/urls
+
+# URL: Filtrar dominios
+#fgrep -v -i -f $1/domains $1/urls > $1/urls.new  					; mv -f $1/urls.new $1/urls

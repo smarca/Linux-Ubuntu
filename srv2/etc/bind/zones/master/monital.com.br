@@ -7,7 +7,7 @@ $TTL	12H
 ;#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
 ;###########################################################################
 @ 	IN SOA srv2 suporte.metropol.com.br. (
-		2017112900 ; serial
+		2017081702 ; serial
 		1H  ; refresh
 		15M ; retry
 		7D  ; expire
@@ -58,13 +58,13 @@ srv2			IN	A	177.220.156.179
 $TTL	2H
 srv                     IN      A       177.220.156.178
 			IN      A       177.220.156.179
-vip                     IN      A       177.220.156.180
-;                       IN      A       177.220.156.178
-;                       IN      A       177.220.156.179
+vip                     IN      A       177.220.156.178
+			IN      A       177.220.156.179
+			IN	A	177.220.156.180
 cam                     IN      A       177.220.156.181
 voip                    IN      A       177.220.156.182
 
-sti                     IN      A       138.122.152.227
+sti                     IN      A       138.122.159.227
 ;----------------------------------------------------------------------------
 ;# Maquinas apelido pra servidor principal
 $TTL    1H
@@ -141,5 +141,5 @@ mdm3-srv2               IN      CNAME   srv2
 ;----------------------------------------------------------------------------
 $TTL    6H
 _domainkey 14400 IN       TXT     "o=~; r=suporte@monital.com.br"
-cur._domainkey 14400 IN       TXT     "dk2017112900"
-dk2017112900._domainkey 14400 IN TXT ("v=DKIM1; k=rsa; dkim=discardable; g=*; p=""MIIBKDANBgkqhkiG9w0BAQEFAAOCARUAMIIBEAKCAQcAzsMTLeMb0RXKvmyWe4bB""xdpc9GZe4ffszQWU1jqvr6stYLg8Qq2WtKO9qikuMEwQBjbczuRwLlxsl2EOkBvt""g4aMOyL36YWCuIh8qCx5FJsz7EiPC02ORYWdg1nA7gfoAw7/4jWKTZU2+A3vZAUO""IYMTljCdPYv1ORw0+sLXCU2cav74cuLl3D2e4+7G3v3hnhHo6ikczeqCigLJd/Sn""mXbt3YT28EhYi9Qbs5VLe09ziFvoyLil3w2oKpFC3EeqeZMgTPv3GiUW/OkUWt/v""4jjQA1wsoVqA0zhIIoIIG+NIPnuEfmwlpcc8XHLQH2WU6FE4ZyrIX26764FU+P55""4s8QtLLA7wIDAQAB")
+cur._domainkey 14400 IN       TXT     "dk2017081700"
+dk2017081700._domainkey 14400 IN TXT ("v=DKIM1; k=rsa; dkim=discardable; g=*; p=""MIIBKDANBgkqhkiG9w0BAQEFAAOCARUAMIIBEAKCAQcAtYwXXNWKwtgZ+Il4w4g1""hIb05rBxl4/XgYXHnsSNoHs8o0FSiZBTsDzwcabpRef1t7s0r8TPnxbWbUyOyb/U""/rELBLNQAolfdTaR3yKVcbMdY2ZGBr30LPxFb9CuvHv9UB/y0ZpT8gm1mJJZPB1G""WD4EH3qLqdviB3jH9h1cgYKPPboKRqAlTjTeCBBSwB4yg8Lhh/fQP0oftgf8QTjo""/N7E6JScrKic8VEI6a0EdJvCcgVA21wVDLES6Bn6W4roLZmmh9EWSB92ODegw/NT""tDvnAC9q5J0l3+Ne+mLPlFC62+11kmCNg6eqoUaaYPsDA4rNKW+ft/ZYxqPQTTh/""/4wEyMkOCwIDAQAB")

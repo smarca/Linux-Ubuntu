@@ -1,0 +1,154 @@
+delay_pools 2
+
+
+delay_class 1 1
+delay_class 2 2
+
+acl sip_ful_speed       src           "/etc/squid/lst/oth/sip.ful.speed"
+acl sdm_ful_speed       srcdomain     "/etc/squid/lst/oth/sdm.ful.speed"
+acl ddm_ful_speed       dstdomain     "/etc/squid/lst/oth/ddm.ful.speed"
+delay_access 1 allow localhost
+delay_access 1 allow sip_ful_speed
+delay_access 1 allow sip_proxy
+delay_access 1 allow sdm_ful_speed
+delay_access 1 allow ddm_ful_speed
+delay_access 1 allow ddm_acc_nocache
+delay_access 1 deny all
+delay_access 2 allow all
+
+delay_parameters 1 -1/-1
+delay_parameters 2 -1/-1 -1/-1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+snmp_port 3401
+
+acl snmppublic snmp_community public
+snmp_access allow snmppublic localhost
+snmp_access allow snmppublic sip_proxy
+snmp_access deny all
+
+
+
+
+
+htcp_port 4827
+
+log_icp_queries off
+
+
+
+
+
+
+
+
+query_icmp off
+
+test_reachability off
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+error_directory /usr/share/squid/errors/Portuguese
+
+
+
+deny_info TCP_RESET sip_proxy
+
+
+
+
+always_direct allow ddm_acc_nocache
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+hosts_file /etc/hosts
+
+
+dns_testnames 127.0.0.1
+
+
+
+
+
+
+
+
+memory_pools_limit 16 MB
+
+
+
+
+
+maximum_single_addr_tries 2
+
+retry_on_error on
+
+
+
+
+coredump_dir none
+
+
+
+pipeline_prefetch on
+
+
+
+
+

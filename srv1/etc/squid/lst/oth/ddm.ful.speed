@@ -1,0 +1,7 @@
+#Velocidade total de navegacao dentro do SITE
+#/usr/sbin/squid3 -k parse
+
+.monital.com.br
+.metropol.com.br
+
+

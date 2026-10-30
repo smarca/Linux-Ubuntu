@@ -1,0 +1,20 @@
+localhost			#LocalHost
+#[.]A[.]localnet                     #Rede A
+#[.]B[.]localnet                     #Rede B
+#[.]C[.]localnet                     #Rede C
+
+#-----------------------------------------------------------------------------
+intsrv1[.]metropol[.]com[.]br         #Local1
+intsrv2[.]metropol[.]com[.]br         #Local2
+srv1[.]metropol[.]com[.]br            #Servidor1
+srv2[.]metropol[.]com[.]br            #Servidor2
+
+fix-.*[.]A[.]localnet          #Fixos IPs ou Hardware
+dir-.*[.]A[.]localnet          #Diretoria
+ger-.*[.]A[.]localnet          #Gerencia
+adm-.*[.]A[.]localnet          #Administrativo
+com-.*[.]A[.]localnet          #Comercial
+opr-.*[.]A[.]localnet          #Operador
+cpd-.*[.]A[.]localnet          #CPD
+#ubuntu.A.localnet	       #Instalador Ubuntu
+

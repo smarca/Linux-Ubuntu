@@ -1,0 +1,29 @@
+127.0.0.1       localhost
+127.0.1.1       srv2.monital.com.br            srv2
+192.168.1.1     copel-dyn
+10.0.0.1        srv1.A.localnet                intsrv1
+10.0.0.2        srv2.A.localnet                intsrv2
+177.220.156.177 copel-fix
+177.220.156.178 srv1.monital.com.br            srv1
+177.220.156.179 srv2.monital.com.br            srv2
+192.168.1.251   srv1-dyn
+192.168.1.251   srv2-dyn
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+10.10.0.1       fix-voipATA-1.A.localnet
+10.10.0.2       fix-wifi-1.A.localnet
+10.10.0.3       fix-wifi-2.A.localnet
+10.10.0.10      cpd-master.A.localnet		
+10.10.0.12      cpd-master2.A.localnet		
+10.10.0.20      cpd-gtrace.A.localnet		
+10.10.0.30      cpd-telefonia.A.localnet
+10.10.0.31      cpd-gravadortel.A.localnet
+10.10.0.100	cpd-boleto.A.localnet
+

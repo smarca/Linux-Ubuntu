@@ -1,0 +1,144 @@
+#!/bin/bash
+exit
+#Desabilitado!
+
+#############################################################################
+# Feito por Silmar A. Marca 
+# smarca@gmail.com - extrair com tar -zxf --preserve backup.tar.gz 
+#############################################################################
+#cd / ;  find . -xdev | cpio -pm /srv/bkp
+LOGNAME=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+EMAIL=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+REPLYTO=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
+MAILTO=alerta@`/bin/hostname`.`/bin/dnsdomainname`
+TMPDIR=/tmp
+MAILTO="renatomsouto@gmail.com" ; copiaerr=alerta@`/bin/hostname`.`/bin/dnsdomainname` ; copiaerr2=root@`/bin/hostname`.`/bin/dnsdomainname`
+export EMAIL REPLYTO MAILTO LOGNAME TMPDIR
+
+#Diretorios
+NOMELOG=bkpextsmb
+LOGDIR=/tmp/backup.${NOMELOG}.log
+Subject="ERR-SMB BACKUP ${NOMELOG} "`/bin/hostname`" - "`/bin/date +%Y-%b-%d" "%T" "\(%a\)`" $*".
+
+#Montar
+mkdir -p /mnt/inside-dados
+umount /mnt/inside-dados 2> /dev/null
+
+#Quais diretorios a fazer backup. Mascaras nao valem para iarq. Usar expressao regexp. Ex. (.*) para todos os tipos
+src[0]="/mnt/inside-dados"
+iarq[0]='.*'
+edir[0]='BackupBancoService'
+dst[0]='/srv/smb/bkup/Suporte/cpd-boleto-dados/' #-mtime 0
+
+RSEM=00				#Salva Backup da semana rotativo (WW - Domingo 00 a Sabado 06). Default: 00
+
+#--------------------------------------------------------------------------
+#Dias de historico de um dia da semana
+smin=1	#Minimo de 1
+smax=2	#Maximo de 9
+
+#Pega variaveis
+HORA=`date +%H`     		# Hora  : de 00 a 23
+DSEM=`date +0%w`    		# Semana: de 00 (Domingo), 01(Segunda) a 06 (Sabado)
+DIA=`date +%d`			# Dia   : 01 ao numero de dias
+MES=`date +%m`      		# Mes   : de 01 a 12
+ANO=`date +%Y`			# Ano   : 2011, 2012...
+PREFIX=`date +%Y-%m-%d_` 	# Prefixo do arquivo de backup
+
+#Apaga arquivo de erro antigo
+rm -f ${LOGDIR} 
+
+mount -t cifs -o ro -o user=inside,password=inside //cpd-boleto.A.localnet/DADOS /mnt/inside-dados 2> /dev/null
+if [ ! $? -eq 0 ]; then
+    echo "**** COMPUTADOR REMOTO APARENTEMENTE DESLIGADO *****"				                                     >> ${LOGDIR}
+fi
+
+#PARTE 0: Verificar se todos diretorios existem
+for idir in ${src[@]}; do
+    if [ ! -d "$idir" -a ! -f "$idir" ]; then
+        logger -p cron.err -t ERRO BACKUP: Diretorio $idir inexistente. Nenhum backup feito na origem $idir 
+	echo													>> ${LOGDIR}
+	echo ====================================================================				>> ${LOGDIR}
+        echo ERRO BACKUP: Nenhum diretorio de origem foi encontrado para o backup solicitado.			>> ${LOGDIR}
+	echo Origem : $idir											>> ${LOGDIR}
+	echo 													>> ${LOGDIR}
+        echo Por favor verifique se o diretorio foi apagado da origem.						>> ${LOGDIR}
+        echo Retorne o diretorio, ou configure o backup para nao fazer mais copia deste diretorio.		>> ${LOGDIR}
+	echo													>> ${LOGDIR}
+    fi
+done
+
+#Efetuar backup dos diretorios existentes
+#PARTE 1: Fazer o backup, compactando...
+for (( i=0; i<${#src[@]}; i++ )); do # for item in "${src[@]}"; do
+  idst=${dst[$i]}/d/$DSEM		#Diretorio backup inicial como sendo o do dia da semana
+  mv ${idst} ${dst[$i]}/d/${DSEM}.old 2> /dev/null #Renomeia o diretorio do dia pra .old
+  mkdir -p ${idst}.new ; cd ${idst}.new		#Cria e acessa o diretorio
+  # For split por nova linha, nao por palavras
+  default_IFS=$IFS
+  IFS="$(echo -e "\n\r")"
+  for isrc in `ls -1 -d -p ${src[$i]}/ 2> /dev/null | grep -v ${dst[$i]} | grep -v '.old/$' `; do
+	rsync -a --max-delete=0 --exclude "${edir[$i]}" ${isrc} ${idst}.new #--max-size=512MB
+  done
+  mkdir -p ${idst} ; cd ${idst} ; mv ${idst}.new/* ${idst}/ ; rmdir ${idst}.new/ 
+  # Restore default
+  IFS=$default_IFS
+done
+
+#PARTE 2: Renomear os diretorios, fazendo rotacao fingindo ser uma fita dat...
+for (( i=0; i<${#dst[@]}; i++ )); do # for item in "${src[@]}"; do
+    #Criar e acessar
+    mkdir -p ${dst[$i]} ; cd ${dst[$i]}	
+    #[Remove OLD se existir o diario se existir arquivos no diretorio diario]
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d/$DSEM/  2>/dev/null >/dev/null
+    if [ -d ${dst[$i]}/d/$DSEM/ ]; then 
+	rm -rf ${dst[$i]}/d/${DSEM}.old 2>/dev/null >/dev/null
+    fi
+    #find ${dst[$i]}/m/ -ctime +500 -mtime 500 -type f -exec rm -f {} \;	  #Apaga arquivos muito estranhos e antigos
+    #Remove os diretorios correntes caso estejam vazios, ou seja, em caso de erro. Tentativa 1
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d/$DSEM/  2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d         2>/dev/null >/dev/null
+
+    #[Rotacionar semanais]
+    #Renomear por semana os arquivos, fazendo com que a semana smin seja a mais recente e a smax a ultima
+    if [ $DSEM -eq $RSEM ]; then
+      if [ -d ${dst[$i]}/d/$DSEM/ ]; then				  #Se mesmo assim, o diretorio existir e ele nao estiver vazio
+  	  if [ -d ${dst[$i]}/s/$[$smax+1] ]; then			  #	Se o backup smax existir
+  	      if [ -d ${dst[$i]}/s/$[$smax] ]; then			  #		Se o mes anterior ao mes maior que smax existir
+		  rm -rf ${dst[$i]}/s/$[$smax+1]			  #			Remove ultima semana
+	      fi
+	  fi
+	  for s in `seq $smax -1 $smin`; do			  #Para todas as semanas, renomear
+	      if [ -d ${dst[$i]}/s/${s}/ ]; then			  #	Se o diretorio x existe
+		  rmdir --ignore-fail-on-non-empty ${dst[$i]}/s/${s}/ #		Tenta remover ele	
+	      fi
+	      if [ $s -eq $smin -a -d ${dst[$i]}/s/${s}/ ]; then	  #	Se mesmo assim, o primeiro diretorio existir e ele nao estiver vazio
+		  mkdir -p ${dst[$i]}/s/ ; mv ${dst[$i]}/s/${s}/ ${dst[$i]}/s/$[$s+1]/	  	  #		Renomeia de n para n+1 fazendo com que ele fique mais antigo	
+	      elif [ $s -gt $smin -a -d ${dst[$i]}/s/${s}/ -a -d ${dst[$i]}/s/${smin} ]; then	  #	Se mesmo assim, os proximos diretorios existir e ele nao estiver vazio
+		  mkdir -p ${dst[$i]}/s/ ; mv ${dst[$i]}/s/${s}/ ${dst[$i]}/s/$[$s+1]/	  	  #		Renomeia de n para n+1 fazendo com que ele fique mais antigo	
+	      fi
+	  done  
+          rm -f ${dst[$i]}/d/$DSEM/*.old 2>/dev/null >/dev/null	  #Remove arquivos old, nao sao mais necessarios nas fitas guardadas
+	  if [ -d ${dst[$i]}/d/$DSEM ]; then
+    		 mkdir -p ${dst[$i]}/s/ ; mv ${dst[$i]}/d/$DSEM/ ${dst[$i]}/s/$smin/  #Renomeia o arquivo do dia e arquiva ele
+	  fi
+      fi
+    fi
+
+    #Remove os diretorios correntes caso estejam vazios, ou seja, em caso de erro. Tentativa 1
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d/$DSEM/  2>/dev/null >/dev/null
+    rmdir --ignore-fail-on-non-empty ${dst[$i]}/d         2>/dev/null >/dev/null
+  done
+
+#Email em caso de erro, mas somente se nao for sabado ou domingo!
+#if [ ! $DSEM -eq 00 -a ! $DSEM -eq 06 ]; then
+#    if [ -f ${LOGDIR} ]; then
+#	ls -lh -g -o -t -r --group-directories-first --full-time /mnt/inside-dados/ | cut -c14- 		            >> ${LOGDIR}
+#	# cat ${LOGDIR} | /usr/bin/mutt -a ${LOGDIR} -s "$Subject" -b $copiaerr -c $copiaerr2 -- $MAILTO
+#	cat ${LOGDIR} | /usr/bin/mutt -a ${LOGDIR} -s "$Subject" -- $MAILTO
+#    fi
+#fi
+
+#Desmontar
+umount /mnt/inside-dados/
+

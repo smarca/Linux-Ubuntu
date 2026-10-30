@@ -1,0 +1,86 @@
+#
+# Instead of the first five fields, one of eight special strings may appear:
+# @reboot        Run once, at startup.
+# @yearly        Run once a year, "0 0 1 1 *".
+# @annually      (same as @yearly)
+# @monthly       Run once a month, "0 0 1 * *".
+# @weekly        Run once a week, "0 0 * * 0".
+# @daily         Run once a day, "0 0 * * *".
+# @midnight      (same as @daily)
+# @hourly        Run once an hour, "0 * * * *".
+#
+# Minute   Hour   Day of Month       Month          Day of Week        Command    
+# (0-59)  (0-23)     (1-31)    (1-12 or Jan-Dec)  (0-6 or Sun-Sat)                
+#    0        2          12             *               0,6           root     <comando> > /dev/null 2>&1 #Horas especificas 
+#  */5        *          *              *               *             www-data <comando> > /dev/null 2>&1 #A cada 5 minutos
+#    *     */03          *              *               *             www-data <comando> > /dev/null 2>&1 #A cada 3 horas
+
+#A cada 5 minutos, horde imp. Diariamente cleanup horde : /etc/php5/cli/php.ini : include_path = ".:/srv/www/default/webmail/pear/php"
+# 0 23  * * *               www-data    /bin/bash /srv/www/default/webmail/pear/data/horde/scripts/temp-cleanup.cron  > /dev/null 2>&1
+# */5 	* * * *		    www-data    cd /srv/www/default/horde5 ; /usr/bin/php -q -f ./pear/horde-crond > /dev/null 2>&1 ; cd - > /dev/null 2>&1
+# */5 	* * * *		    root        /usr/bin/horde-alarms
+
+#A cada 5 minutos, Wordpress
+#*/45 * * * * 		    www-data    cd /srv/www/home/xxx/www/ ; /usr/bin/php -q -f ./wp-cron.php > /dev/null 2>&1 ; cd - > /dev/null 2>&1
+#*/5 * * * * 		    www-data    cd /srv/www/home/pracao.com.br/www/ ; /usr/bin/php -q -f ./wp-cron.php > /dev/null 2>&1 ; cd - > /dev/null 2>&1
+
+#Spf startup confirmacao a cada 30 minutos e ao reboot
+@reboot                      root       /etc/exim4/spf/spfd.init start > /dev/null 2>&1
+*/30 * * * *                 root       /etc/exim4/spf/spfd.init start > /dev/null 2>&1
+
+#Virus Scan Semanal. Inicia no sabado as 22 horas
+0 22 * * 6                   root       /etc/jobmarca/run.avirus
+
+#Job a cada 15 minutos: Verificar sistema espelhamentos etc
+*/15  * * * *		     root       /etc/jobmarca/run.vrfsys
+
+#Job a cada 3 horas: Sync do disco, limpar cache de arquivos e liberar memoria
+0 */3 * * *                  root       /bin/sync && /sbin/sysctl -q -w vm.drop_caches=3
+
+#Jobs Hora em Hora
+@hourly			     root       /etc/jobmarca/run.vrfarp
+@hourly			     root       /etc/jobmarca/run.rsync1
+
+#Job a cada 1 minutos
+*/1  * * * *                 root       [[ -z "`pidof dhcpd`" ]] && /bin/systemctl start isc-dhcp-server.service
+@monthly                     root       /etc/jobmarca/run.dhcpfix
+
+#Job de Dia em Dia, um por hora.. depois da meia noite 1,2,3.. terminando com o sistema as 12 horas (pra nao me acordar de madruga hehehe)
+@daily			     root       /etc/jobmarca/run.bkpprog
+@daily			     root       /etc/jobmarca/run.bkpbd
+0  22,10 * * *		     root       /etc/dshield/run.dshield > /dev/null
+@daily		             root       /etc/firewall/iptables.sh dshield  > /dev/null 2> /dev/null
+# 45 18 * * *                root       /etc/jobmarca/run.bkpextsmb
+# 0  19 * * *                root       /etc/jobmarca/run.rsyncextsmb
+
+#Upgrade hosts dinamicas para acesso
+0 7,14,21 * * *              root       /etc/firewall/iptables.sh dynaccess  > /dev/null 2> /dev/null
+
+#Backup das configuracoes por email diariamente as 13 horas
+0 13 * * *		     root       /etc/jobmarca/run.bkpsys
+
+#Job quinta feira as cinco da tarde
+0 17 * * 4		     root       /etc/jobmarca/run.vrfreboot
+
+#Backup paginas no sabado as 23 horas
+0 23 * * 6 		     root       /etc/jobmarca/run.bkpweb
+
+#Estatisticas
+@daily                       root       mkdir -p /srv/www/default/stat/mail/ ; /usr/sbin/eximstats -emptyok -byhost -bydomain -byemail -byemaildomain -include_original_destination -tnl -nr -html=/srv/www/default/stat/mail/index.html /var/log/exim4/mainlog /var/log/exim4/mainlog.1
+
+#Remover arquivo samba temp e temporario do sistema
+@monthly                     metropol   /bin/rm -rf  /srv/smb/temp/* 2> /dev/null
+@monthly                     root       /etc/jobmarca/run.deltemp /srv/smb
+@daily                       www-data   /usr/bin/find /tmp/* -type f -user www-data -ctime +1 -mtime +1 -delete 2> /dev/null
+@daily                       root       /usr/bin/find /srv/smb/recycle/* -type f -ctime +30 -mtime +30 -delete 2> /dev/null; /usr/bin/find /srv/smb/recycle/* -empty -type f -delete 2> /dev/null ; /usr/bin/find /srv/smb/recycle/* -empty -type d -delete 2> /dev/null
+@daily                       root       /usr/bin/find /tmp/* -type f -ctime +15 -mtime +15 -delete 2> /dev/null
+@daily                       root       /usr/bin/find /tmp/* -empty -type f -delete 2> /dev/null ; /usr/bin/find /tmp/* -empty -type d -delete 2> /dev/null
+@reboot                      root       /usr/bin/find /tmp/* -not -path "/tmp/virus/*" -type f -ctime +3 -mtime +3 -delete 2> /dev/null
+
+
+
+
+
+
+
+

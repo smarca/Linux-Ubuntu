@@ -1,0 +1,13 @@
+#Clientes com velocidade de navegacao FULL
+
+localhost                         #Maquina Local
+#[.]A[.]localnet                      #Rede A
+#[.]B[.]localnet                      #Rede B
+#[.]C[.]localnet                      #Rede C
+
+#-----------------------------------------------------------------------------
+intsrv1[.]metropol[.]com[.]br         #Local1
+intsrv2[.]metropol[.]com[.]br         #Local2
+srv1[.]metropol[.]com[.]br           #Servidor1
+srv2[.]metropol[.]com[.]br           #Servidor2
+

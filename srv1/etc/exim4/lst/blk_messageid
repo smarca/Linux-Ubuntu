@@ -1,0 +1,10 @@
+#Apenas a parte do dominio no header Message-ID:
+
+#Partes de dominios
+^(.*[.])?.*mkt.*                     MARKETING
+^(.*[.])?.*bounce.*                  MARKETING
+^(.*[.])?.*parceiros[.].*            MARKETING
+^(.*[.])?.*parcerias[.].*            MARKETING
+
+
+

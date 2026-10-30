@@ -1,0 +1,68 @@
+#Periculosidade Altissima
+\.(cab)(\?.*)?$
+
+#Periculosidade Confirmada
+\.(scr|lnk)(\?.*)?$
+
+#Periculosidade Alta
+#\/[^?]*\.(com|exe|pif|bat|lnk|reg|scr|cmd|msi)(\?.*)?$
+
+#Virus
+winnt/system32/cmd.exe?
+akamai.*yahoo.*config/login
+
+#Periculosidade Media
+#\.(bin|btm|chm|dll|ole|ocx|jtd|sys|vxd|wsc|wsf|wsh|oft|ovl|pl|plx|shb|shs|vss|vst|dat|ade|adp)(\?.*)?$
+#\.(asx|bas|chm|cpl|crt|hlp|hta|inf|ins|isp|js|jse|mda|mdb|mde|mdt|mdw|mdz)(\?.*)?$
+#\.(msc|msp|mst|ops|pcd|prf|scf|sct|shb|shs|url|vb|vbe|vbs|ws|wsf|ws|mso|src)(\?.*)?$
+
+#Periculosidade Media-Baixa
+#\.(zip|rar|arj|gz|bzip|gz|ace|lha|lhz)(\?.*)?$
+
+#Periculosidade Media-Baixa
+#\.(doc|dot|xls|ppt|rtf)(\?.*)?$
+
+#Periculosidade Indeterminada ou Inexistente
+#\.(jar|class)(\?.*)?$
+
+#Nenhuma Periculosodade, Apenas por tamanho
+#\.(iso|mp3|avi|mpeg|mpg|qt|ram|rm|raw|wav)(\?.*)?$
+
+
+################################################################################################################################
+#.\js$     # ".js   [JavaScript code]"
+#.\css$    # ".css  [Cascading Style Sheets]"
+#.\html$   # ".html [Hypertext Markup Language]"
+#.\htm$    # ".htm  [Hypertext Markup Language]"
+#.\shtml$  # ".shtml [Server-parsed HTML]"
+#.\asp$    # ".asp  [Active Server Pages]"
+#.\jsp$    # ".jsp  [Java Server Pages]"
+#.\cfm$    # ".cfm  [Cold Fusion]"
+#.\php$    # ".php  [PHP]"
+#.\txt$    # ".txt  [Plain text]"
+#.\cgi$    # ".cgi  [CGI scripts]"
+#.\pl$     # ".pl   [Perl scripts]"
+#.\class$  # ".class [Java class files]"
+# .\doc$    # ".doc  [Microsoft Word document]"
+# .\rtf$    # ".rtf  [Rich Text Format]"
+# .\ps$     # ".ps   [PostScript]"
+# .\gz$     # ".gz   [Gzip compressed files]"
+# .\tar.gz$ # ".tar.gz [Compressed archives]"
+# .\jpg$    # ".jpg  [JPEG graphics]"
+# .\jpeg$   # ".jpeg [JPEG graphics]"
+# .\gif$    # ".gif  [GIF graphics]"
+# .\png$    # ".png  [PNG graphics]"
+# .\pdf$    # ".pdf  [Adobe Portable Document Format]"
+# .\zip$    # ".zip  [Zip archives]"
+# .\hqx$    # ".hqx  [Macintosh BinHex files]"
+# .\exe$    # ".exe  [Executables]"
+# .\bin$    # ".bin  [Binary]"
+# .\iso$    # ".iso  [ISO]"
+# .\wav$    # ".wav  [WAV sound files]"
+# .\avi$    # ".avi  [AVI movies]"
+# .\arc$    # ".arc  [Compressed archives]"
+# .\mid$    # ".mid  [MIDI sound files]"
+# .\mp3$    # ".mp3  [MP3 sound files]"
+# .\mov$    # ".mov  [Quick Time movie]"
+# .\mpg$    # ".mpg  [MPEG movie]"
+# .\mpeg$   # ".mpeg [MPEG movie]"

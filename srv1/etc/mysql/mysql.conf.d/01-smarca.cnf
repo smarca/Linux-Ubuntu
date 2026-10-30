@@ -1,0 +1,83 @@
+[mysqld]
+performance_schema=off
+datadir=/srv/bd/mysql/
+
+#-[Outros parametros de Espelhamento]
+#server-id               = 2
+#report-host             = srv2.monital.com.br
+#log-bin                 = /var/log/mysql/mysql-bin.log
+#relay-log               = /var/log/mysql/mysqld-relay-bin.log
+#binlog-do-db            = test
+#replicate-do-db         = test
+#binlog-do-db            = horde5
+#replicate-do-db         = horde5
+#binlog-do-db            = maildb
+#replicate-do-db         = maildb
+#binlog-ignore-db        = mysql
+#replicate-ignore-db     = mysql
+#binlog-ignore-db        = information_schema
+#replicate-ignore-db     = information_schema
+
+#-[Outros parametros]
+bind-address            = 127.0.0.1
+#replicate-same-server-id = 0
+#max_binlog_size         = 50M
+#expire_logs_days        = 5
+
+#-[Parametros extras]
+#auto-increment-increment = 2
+#auto-increment-offset  = 1
+
+general_log_file        = /var/log/mysql/mysql.log
+log_error               = /var/log/mysql/error.log
+general_log             = 1
+#log_slow_queries        = /var/log/mysql/mysql-slow.log
+#long_query_time = 2
+
+#------------------------------------------------------
+#-[Parametros master] replication:vjTRdX6u2MKXDHZ5
+# GRANT REPLICATION SLAVE , REPLICATION CLIENT ON * . * TO 'replication'@'%';
+
+#slave stop;
+#RESET SLAVE ALL;
+#CHANGE MASTER TO MASTER_HOST = '10.0.0.1', MASTER_USER = 'replication', MASTER_PASSWORD = 'vjTRdX6u2MKXDHZ5', MASTER_LOG_POS=107, MASTER_LOG_FILE='mysql-bin.000001';
+#slave start;
+
+#reset master;
+#FLUSH TABLES WITH READ LOCK;
+#stop slave;
+#reset slave;
+#start slave;
+
+
+#CHANGE MASTER TO MASTER_LOG_FILE='mysql-bin.000001', MASTER_LOG_POS=1;
+
+#-[Memoria: key_buffer_size + (read_buffer_size + sort_buffer_size)*max_threads]
+#performance_schema = off
+#innodb_buffer_pool_size = 8M
+#innodb-additional-mem-pool-size = 12M
+#innodb_log_buffer_size  = 256K
+#query_cache_size        = 8M
+#query_cache_limit       = 512K
+#read_buffer_size	= 16K
+#sort_buffer_size	= 1M
+#thread_stack           = 128K
+#query_cache_size	= 0
+#max_connections	= 10
+#key_buffer_size	= 8
+#thread_cache_size	= 0
+#host_cache_size	= 0
+#innodb_ft_cache_size	= 1600000
+#innodb_ft_total_cache_size=32000000
+#thread_stack		= 131072
+#sort_buffer_size	= 32K
+#read_buffer_size	= 8200
+#read_rnd_buffer_size	= 8200
+#max_heap_table_size	= 16K
+#tmp_table_size		= 1K
+#bulk_insert_buffer_size= 0
+#join_buffer_size	= 128
+#net_buffer_length	= 1K
+#innodb_sort_buffer_size = 64K
+#binlog_cache_size	= 4K
+#binlog_stmt_cache_size	= 4K

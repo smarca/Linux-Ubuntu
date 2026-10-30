@@ -67,8 +67,6 @@ auto eth1
 	pre-down  ip rule del from all fwmark 2 
 	post-up	  ip rule add from all fwmark 5 table eth1  prio 20000
 	pre-down  ip rule del from all fwmark 5 
-	post-up	  ip rule add from all fwmark 6 table eth1  prio 20000
-	pre-down  ip rule del from all fwmark 6 
 	post-up	  ip rule add from all fwmark 10 table eth1 prio 20000
 	pre-down  ip rule del from all fwmark 10 
         post-up echo 1 > /proc/sys/net/ipv6/conf/eth1/disable_ipv6

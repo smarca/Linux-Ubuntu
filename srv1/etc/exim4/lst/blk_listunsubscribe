@@ -1,0 +1,8 @@
+#Apenas o header List-Unsubscribe:
+
+#Partes de dominios
+^(.*)?emailmarketing(.*)?    MARKETING
+^(.*)?emailmkt(.*)?	     MARKETING
+^(.*)?mkt[.](.*)?	     MARKETING
+^(.*)?bounce(.*)?	     MARKETING
+^(.*)?parceiros[.](.*)?	     MARKETING

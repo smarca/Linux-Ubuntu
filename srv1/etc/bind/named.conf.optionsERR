@@ -1,0 +1,144 @@
+#--[SERVIDORES]------------------------------------------
+server 127.0.0.1        { keys {                       key_int; }; };
+server 10.0.0.1         { keys {                       key_int; }; };
+server 10.0.0.2         { keys {                       key_int; }; };
+server 177.220.156.178  { keys {                       key_ext; }; };
+server 177.220.156.179  { keys {                       key_ext; }; };
+#--[SERVIDORES]------------------------------------------
+
+acl CLIENT_INT {
+        10/8;
+        192.168/16;
+        172.16/12;
+};
+
+acl CLIENT_EXT {
+    187.5.0.132;			#sti.metropol.com.br
+    # 177.220.156.178;
+    # 177.220.156.179;
+};
+
+acl SLAVE_INT {
+        10.0.0.1;
+        # 10.0.0.2;
+};
+acl SLAVE_EXT {
+        177.220.156.178;
+        # 177.220.156.179;
+};
+
+#Ordenar a mesma rede da operadora local por primeiro
+acl NET_BR {
+        138/8;
+        168/8;
+        191/8;
+        177/8;
+        200/8;
+        201/8;
+        189/8;
+        187/8;
+        186/8;
+        179/8;
+        143/8;
+        67/8;
+};
+
+acl DNS_EMBRATEL {
+         200.255.125.211;
+         200.255.125.214;
+         200.255.253.241;
+         200.245.255.33;
+};
+acl DNS_COPEL {
+	200.195.159.100;
+	200.195.159.101;
+        200.195.129.35;
+        200.195.159.66;
+        200.195.166.34;
+};
+
+acl DNS_REGISTRO {
+	200.160.2.3;
+};
+
+# ftp://ftp.registro.br/pub/doc/configuracao_dnssec_servidor_recursivo.pdf
+# https://registro.br/tecnologia/root-anchor.html
+managed-keys {
+   . initial-key 257 3 8 "AwEAAagAIKlVZrpC6Ia7gEzahOR+9W29euxhJhVVLOyQbSEW0O8gcCjF
+                          FVQUTf6v58fLjwBd0YI0EzrAcQqBGCzh/RStIoO8g0NfnfL2MTJRkxoX
+                          bfDaUeVPQuYEhg37NZWAJQ9VnMVDxP/VHL496M/QZxkjf5/Efucp2gaD
+                          X6RS6CXpoY68LsvPVjR0ZSwzz1apAzvN9dlzEheX7ICJBBtuA6G3LQpz
+                          W5hOA2hzCTMjJPJ8LbqF6dsV6DoBQzgul0sGIcGOYl7OyQdXfZ57relS
+                          Qageu+ipAdTTJ25AsRTAoub8ONGcLmqrAmRLKBP1dfwhYB4N7knNnulq
+                          QxA+Uk1ihz0=";
+};
+
+options {
+        blackhole { blackhole; };
+	directory "/etc/bind";
+	pid-file        "/var/run/named/named.pid";
+	key-directory 	"/etc/bind/zones/root";
+	dump-file       "/tmp";
+	zone-statistics no;
+
+	auth-nxdomain no;    # conform to RFC1035
+	preferred-glue A;
+	# listen-on-v6 { none; };
+	# filter-aaaa-on-v4 yes;
+	match-mapped-addresses no;
+        notify explicit;
+	recursion no;
+	dnssec-validation auto;
+	additional-from-auth no;
+	additional-from-cache no;
+        version "Servidor DNS";
+	server-id none;
+        allow-query     { localhost; CLIENT_INT; CLIENT_EXT; };
+	allow-query-cache  { localhost; CLIENT_INT; CLIENT_EXT; };
+	allow-recursion { localhost; CLIENT_INT; CLIENT_EXT; };
+	deny-answer-addresses { 10/8; 192.168/16; 172.16/12; };
+	allow-update 	{ };
+	allow-update-forwarding { };
+	provide-ixfr yes;
+	serial-query-rate 1;
+        transfers-in 2;
+	transfers-out 5;
+	min-refresh-time 600;      //10 minutos
+	max-refresh-time 86400;	   //1 dia
+        transfer-format many-answers;
+        max-ncache-ttl 45;    	 //Pesquisas negadas podem ser repetidas depois de alguns segundos
+	max-cache-size 32m;	 //Cache de pesquisas
+	tcp-clients 100;	 //Clientes simultaneos
+        recursive-clients 50;	 //Clientes procurando recursivo simultaneo
+	recursive-clients 100;   //Clientes Simultaneos (default 1000)
+	max-journal-size 50k;
+	interface-interval 5;
+        rrset-order {
+	    class ANY type ANY name "monital.com.br" order cyclic; 
+	    class ANY type ANY name "metropol.com.br" order cyclic; 
+	    class ANY type ANY name "monital.net.br" order cyclic; 
+	    class ANY type ANY name "a.localnet" order cyclic; 
+	    class ANY type ANY name "*" order random;
+	};
+        rate-limit {
+            responses-per-second 5;
+            window 5;
+            exempt-clients { localhost; CLIENT_INT; };
+        };
+       sortlist {
+            { 127.0.0.0/8;    { 127.0.0.0/8; localhost; 10.0.0.0/8; 192.168.0.0/16; 172.16.0.0/12; localnets; NET_BR; };};
+            { localhost;      { localhost; localnets; NET_BR; };};
+            { 10.0.0.0/8;     { localhost; 10.0.0.0/8; localnets; NET_BR; };};
+            { 192.168.0.0/16; { localhost; 192.168.0.0/16; localnets; NET_BR; };};
+            { 172.16.0.0/12;  { localhost; 172.16.0.0/12; localnets; NET_BR; };};
+            { localnets;      { localhost; localnets; NET_BR; };};
+            { localhost; localnets; NET_BR; };
+        };
+        //topology { { localhost; localnets; NET_BR; }; };
+	notify-delay 3;
+        forward first;    
+        // forwarders { 200.195.159.100; 200.195.159.101; };  	//Copel Telecom - dnsone.copel.net, dnstwo.copel.net
+        // forwarders { 8.8.8.8; 8.8.4.4; };  			//Google - google-public-dns-a.google.com, google-public-dns-b.google.com
+	// forwarders { 208.67.222.222; 208.67.220.220; }; 	//OpenDNS - resolver1.opendns.com, resolver1.opendns.com
+};
+

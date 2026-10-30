@@ -21,7 +21,7 @@ ff02::3 ip6-allhosts
 10.10.0.2       fix-wifi-1.A.localnet
 10.10.0.3       fix-wifi-2.A.localnet
 10.10.0.10      cpd-master.A.localnet		
-10.10.0.12      cpd-moni.A.localnet		
+10.10.0.12      cpd-master2.A.localnet		
 10.10.0.20      cpd-gtrace.A.localnet		
 10.10.0.30      cpd-telefonia.A.localnet
 10.10.0.31      cpd-gravadortel.A.localnet

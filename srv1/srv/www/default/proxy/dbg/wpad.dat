@@ -1,0 +1,72 @@
+//###########################################################################
+//#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+//###########################################################################
+//#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+//#  *  Informe o autor sobre falhas ou incremento de funcoes            *  #
+//#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+//###########################################################################
+
+//-------------------------------------------------------------------
+//DEBUG
+function getDebug(url, host) {
+    debugPAC ="PAC Debug Information\n";
+    debugPAC +="-----------------------------------\n";
+    debugPAC +="Machine IP : " + myIpAddress() + "\n";
+    debugPAC +="Machine IPx: " + myIpAddressEx() + "\n";
+    debugPAC +="\n";
+    debugPAC +="Hostname: " + host + "\n";
+    var resolved_ip = dnsResolve(host);
+    if ( isInNet(resolved_ip,"127.0.0.0","255.255.255.0") || isInNet(resolved_ip,"10.0.0.0","255.0.0.0") || isInNet(resolved_ip,"172.16.0.0","255.240.0.0") || isInNet (resolved_ip,"192.168.0.0","255.255.0.0") ) { isLocalNet = true } else { isLocalNet = false }
+    debugPAC +="Host LocalNet: " + isLocalNet + "\n";
+    if (isResolvable(host)) {resolvableHost = "True"} else {resolvableHost = "False"};
+    debugPAC +="Host Resolvable: " + resolvableHost + "\n";
+    debugPAC +="Hostname IP : " + dnsResolve(host) + "\n";
+    debugPAC +="Hostname IPx: " + dnsResolveEx(host) + "\n";
+    if (isPlainHostName(host)) {plainHost = "True"} else {plainHost = "False"};
+    debugPAC +="Plain Hostname: " + plainHost + "\n";
+    debugPAC +="Domain Levels: " + dnsDomainLevels(host) + "\n";
+    debugPAC +="\n";
+    debugPAC +="URL: " + url + "\n";
+ 
+    // Protocol can only be determined by reading the entire URL.
+    if (url.substring(0,5)=="http:") {protocol="HTTP";} else
+        if (url.substring(0,6)=="https:") {protocol="HTTPS";} else
+            if (url.substring(0,4)=="ftp:") {protocol="FTP";}
+                else {protocol="Unknown";}
+    debugPAC +="Protocol: " + protocol + "\n";
+    debugPAC +="-----------------------------------\n";
+
+    // Apenas se nao for imagem!
+    // if (!shExpMatch(url,"*.(js|xml|ico|gif|png|jpg|jpeg|css|swf)*")) { return debugPAC } else { return null }
+    return debugPAC;
+}
+
+//-------------------------------------------------------------------
+//Normal
+function getProxy(url, host) {
+    host = host.toLowerCase ();
+    if (shExpMatch(host, "*.localnet")) { // dnsDomainIs(host, ".localnet")
+	return "DIRECT";
+    } else if (isPlainHostName(host)) {
+	return "DIRECT";
+    } else if ( isInNet(resolved_ip,"127.0.0.0","255.255.255.0") || isInNet(resolved_ip,"10.0.0.0","255.0.0.0") || isInNet(resolved_ip,"172.16.0.0","255.240.0.0") || isInNet (resolved_ip,"192.168.0.0","255.255.0.0") )  {
+	var resolved_ip = dnsResolveEx(host);
+	if (isInNet(resolved_ip, "177.220.156.176", "255.255.255.248")) {
+	    return "DIRECT";
+	} else if (isInNet(myIpAddressEx(), "10.0.0.0", "255.0.0.0")) {
+	    return "PROXY proxy.A.localnet:3128";
+	} else {
+	    return "PROXY proxy.A.localnet:3128";
+	}
+    }
+}
+
+//-------------------------------------------------------------------
+//Main
+function FindProxyForURL(url, host) {
+    // Debug ?
+    // alert(getDebug(url, host));
+
+    // Retornar Proxy
+    return getProxy(url, host);
+}

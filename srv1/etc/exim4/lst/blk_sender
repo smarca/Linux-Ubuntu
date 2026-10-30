@@ -1,0 +1,75 @@
+ #Bloqueia o sender
+# https://www.debuggex.com/
+
+#Determinados emails com qualquer dominio
+^nobody.*@.*				Email Estranho
+^anonymous@.*				Email Estranho
+^apache.*@.*				Email SPAM
+^naoresponda.*@.*			Email SPAM
+# ^bounce.*@.*				Email SPAM
+^smtp.*@.*				Email SPAM
+^.*retorno.*@.*				Email SPAM
+^return.*@.*				Email SPAM
+^erros.*@.*				Email SPAM
+^news.*@.*				Email MARKETING
+^.*sales.*@.*				Email MARKETING
+^.*mkt.*@.*				Email MARKETING
+^mailmkt@.*				Email MARKETING
+^.*marketing.*@.*                       Email MARKETING
+^.*maketing.*@.*                        Email MARKETING
+^parceiro@.*                            Email MARKETING
+^parcerias@.*                           Email MARKETING
+^.*oferta.*@.* 	                        Email MARKETING
+^.*send.*@.                             Email MARKETING
+^.*lolita.*@.*				Email Propaganda
+
+#Partes de dominios
+^(.*)@(.*[.])?emailmkt.*		MARKETING
+^(.*)@(.*[.])?emailmarketing.*		MARKETING
+^(.*)@(.*[.])?mkt.*			MARKETING
+^(.*)@(.*[.])?.*mkt[.].*		MARKETING
+^(.*)@(.*[.])?news.*			MARKETING
+^(.*)@(.*[.])?.*marketing.*		MARKETING
+^(.*)@(.*[.])?bounce.*			MARKETING
+^(.*)@(.*[.])?parceiros[.].*		MARKETING
+^(.*)@(.*[.])?parcerias[.].*		MARKETING
+^(.*)@(.*[.])?publicidade[.].*		MARKETING
+^(.*)@(.*[.])?(pop|ftp|smtp|mail|www)[.].*	MARKETING
+
+#Determinados Emails Fixados
+brturfe@globo.com			2011 - Email SPAM
+turfe@terra.com.br			2011 - Email SPAM
+intelligence@fnn.net			2011 - Email SPAM
+qualific@gmail.com			2011 - Email SPAM
+
+#Sub dominios Inteiros 
+^.*@.*[.]tv				SPAM
+^.*@.*[.]cc				SPAM
+#^.*@.*[.]info				SPAM
+#^.*@.*[.]biz				SPAM
+
+#Numeros e pontos apenas
+^(\d|\W)*@.*				Email tipo id return - somente digitos e simbolos
+^((\w|\d)*(\W)+(\w|\d)*){5,}@.*		Email tipo id return - muitos simbolos separadores
+# ^(.*(\d)+.*){6,}@.*			Email tipo id return - muitos numeros
+
+#Dominios Inteiros *@e Seus subdominios *. (^(.*)@(.*[.])?dominiospam[.]com[.]br)
+^(.*)@(.*[.])?kmdevantagens[.]com[.]br			2011 - Excesso de Propagandas
+^(.*)@(.*[.])?abrildirect[.]com[.]br			2011 - Excesso de Propagandas
+^(.*)@(.*[.])?redepontofacil[.]com[.]br			2011 - Excesso de Propagandas
+^(.*)@(.*[.])?lmlmgv[.]com[.]br				2014 - Excesso de Propagandas
+^(.*)@(.*[.])?mlmlgv[.]com[.]br				2014 - Excesso de Propagandas
+^(.*)@(.*[.])?mailgvtop.*[.]com[.]br			2014 - Excesso de Propagandas
+^(.*)@(.*[.])?grupodeacesso[.]com[.]br                  2016 - Excesso de Propagandas
+^(.*)@(.*[.])?pelosocial[.]com[.]br                     2016 - Excesso de Propagandas
+^(.*)@(.*[.])?essenciadeflores[.]com[.]br               2016 - Excesso de Propagandas
+^(.*)@(.*[.])?assistindotv[.]com[.]br                   2016 - Excesso de Propagandas
+^(.*)@(.*[.])?superofertaespecial[.]com[.]br            2016 - Excesso de Propagandas
+^(.*)@(.*[.])?superprecobaixo[.]com[.]br                2016 - Excesso de Propagandas
+^(.*)@(.*[.])?seumelhordesconto[.]com[.]br              2016 - Excesso de Propagandas
+^(.*)@(.*[.])?portaleletro[.]com[.]br                   2016 - Excesso de Propagandas
+^(.*)@(.*[.])?comprefacilonline[.]com[.]br              2016 - Excesso de Propagandas
+^(.*)@(.*[.])?novosuplemento[.]com[.]br                 2016 - Excesso de Propagandas
+^(.*)@(.*[.])?pontosmultiplus[.]com[.]br                2016 - Excesso de Propagandas
+
+

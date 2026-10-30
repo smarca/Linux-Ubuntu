@@ -1,0 +1,19 @@
+# Site-specific additions and overrides for usr.sbin.named.
+# For more details, please see /etc/apparmor.d/local/README.
+  
+  /etc/bind/tmp-* rw,
+  /etc/bind/** r,
+  /etc/bind/ r,
+  /var/run/named.pid rw,
+  /etc/bind/zones/localnet/** rw,
+  /etc/bind/zones/localnet/ rw,
+  /etc/bind/zones/slave/** rw,
+  /etc/bind/zones/slave/ rw,
+  /etc/bind/zones/master/** r,
+  /etc/bind/zones/master/ r,
+  /tmp/** rw,
+  /tmp/ rw,
+  /etc/bind/*.jnl rw,
+  /etc/bind/*.mkeys rw,
+  /etc/bind/*.jnw rw,
+

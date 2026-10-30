@@ -1,0 +1,81 @@
+^video/*
+^audio/*
+^image/*
+
+#cat /var/log/squid3/access.log | awk '{ print $(NF) }' | sort | uniq -c
+################################
+# http://www.iana.org/assignments/media-types/
+# http://plugindoc.mozdev.org/winmime.html
+# http://www.w3schools.com/media/media_mimeref.asp
+# http://www.utoronto.ca/webdocs/HTMLdocs/Book/Book-3ed/appb/mimetype.html
+# http://www.ltsw.se/knbase/internet/mime.htp
+# http://en.wikipedia.org/wiki/Internet_media_type
+# http://www.phpfreaks.com/mimetypes.php
+################################
+#AUDIO
+#^audio/x-pn-realaudio$ 
+#^audio/x-ms-wma$ 
+#^audio/basic$ 
+#^audio/x-mpeg$ 
+#^audio/x-mpeg-2$ 
+#^audio/x-mpeg3$ 
+#^audio/x-aiff$ 
+#^audio/x-mpg$ 
+#^audio/x-mpegurl$ 
+#^audio/x-wav$ 
+#^audio/x-aac$ 
+#^audio/x-caf$ 
+#^audio/x-gsm$ 
+#^audio/x-m4a$ 
+#^audio/x-m4b$ 
+#^audio/x-m4p$ 
+#^audio/x-mid$ 
+#^audio/x-midi$ 
+#^audio/x-mp3$ 
+#^audio/x-ms-wax$ 
+#^audio/x-ms-wma$ 
+#^audio/x-pn-realaudio-plugin$ 
+#^audio/x-rmf$ 
+#^audio/x-s3m$ 
+#^audio/x-sd2$ 
+#^audio/x-songsafe$ 
+#^audio/x-zipped-it$ 
+#^audio/x-zipped-mod$ 
+#^audio/midi$ 
+#^audio/mp3$ 
+#^audio/mp4$ 
+#^audio/mpegurl$ 
+#^audio/mpg$ 
+#^audio/rmf$ 
+#^audio/mpeg3$ 
+#^audio/mid$ 
+#^x-music/x-midi$ 
+#^application/x-pn-realaudio$ 
+#^application/vnd.music-niff$ 
+#############################
+#VIDEO
+#^video/mpeg$
+#^video/quicktime$
+#^video/sd-video
+#^video/msvideo$
+#^video/mp4$
+#^video/flc$
+#^video/divx$
+#^video/avi$
+#^video/3gpp2$
+#^video/3gpp$
+#^video/x-la-asf$
+#^video/x-ms-asf$
+#^video/x-msvideo$
+#^video/x-sgi-movie$
+#^video/x-dv$
+#^video/x-ivf$
+#^video/x-m4v$
+#^video/x-mpeg$
+#^video/x-ms-asf$
+#^video/x-ms-asf-plugin$
+#^video/x-ms-wm$
+#^video/x-ms-wmv$
+#^video/x-ms-wmx$
+#^video/x-msvideo$ 
+##########

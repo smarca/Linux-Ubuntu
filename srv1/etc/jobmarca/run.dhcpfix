@@ -1,0 +1,54 @@
+#!/bin/bash
+
+systemctl stop isc-dhcp-server.service
+
+cp /var/lib/dhcp/dhcpd.leases /var/lib/dhcp/dhcpd.leases.bkp.`date +%Y-%m-%d_%HH-%MM`
+
+cat /var/lib/dhcp/dhcpd.leases.bkp.`date +%Y-%m-%d_%HH-%MM` | awk -F " " '{
+    if ( $1 == "lease" ) {
+        Flag="false"
+        Estado="";
+        DNSIP=$2;
+        Hostname="";
+        DNSRev="";
+        Estado="";
+        DtEND="";
+        DtINI="";
+        DHCP_Machine = "";
+        MACAdr="";
+    }
+
+    if ( $1" "$2        == "binding state" )            { Estado=substr($3,1,length($3)-1); };
+    if ( $1             == "client-hostname" )          { Hostname=substr($2,2,length($2)-3); };
+    if ( $1" "$2        == "hardware ethernet" )        { MACAdr=substr($3,1,length($3)-1); };
+    if ( $1             == "ends" )                     { DtEND=$3"  "substr($4,1,length($4)-1); };
+    if ( $1             == "starts" )                   { DtINI=$3"  "substr($4,1,length($4)-1); };
+    if ( $1" "$2        == "set ddns-fwd-name" )        { DNSRev=substr($4,2,length($4)-3); };
+
+    DHCP_Machine = DHCP_Machine "\n" $0;
+
+    if ($1 == "}" ) {
+        if (Estado == "active") {
+          if (index(ALL_MACAdr,MACAdr) == "0" ) {
+            Flag="true";
+            ALL_MACAdr = ALL_MACAdr";"MACAdr;
+          }
+          if (index(ALL_Hostname,Hostname) == "0" ) {
+            Flag="true";
+            ALL_Hostname = ALL_Hostname";"Hostname;
+          }
+        }
+        if ( (Flag == "true") ) {
+            printf("%s\n",DHCP_Machine);
+            # printf("%s %s \t%s\n",MACAdr,Estado,Hostname);
+        }
+        DHCP_Machine = "";
+    };
+}' > /var/lib/dhcp/dhcpd.leases
+
+systemctl stop bind9
+rm -f /etc/bind/zones/localnet/*.jnl
+systemctl start bind9
+
+sleep 10
+systemctl start isc-dhcp-server.service

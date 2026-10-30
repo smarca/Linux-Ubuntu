@@ -1,0 +1,271 @@
+###########################################################################
+#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe o autor sobre falhas ou incremento de funcoes            *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+#ip rule
+#ip route list table local
+#ip route list table main 
+#ip route list table eth0
+#ip route list table all
+# http://baturin.org/docs/iproute2/
+
+# The loopback network interface
+no-auto-down lo
+auto lo
+iface lo inet loopback
+	post-up if [ -z "`cat /etc/iproute2/rt_tables | grep eth0`" ]; then echo "100 eth0" >> /etc/iproute2/rt_tables; fi
+	post-up if [ -z "`cat /etc/iproute2/rt_tables | grep eth1`" ]; then echo "101 eth1" >> /etc/iproute2/rt_tables; fi
+	post-up if [ -z "`cat /etc/iproute2/rt_tables | grep eth2`" ]; then echo "102 eth2" >> /etc/iproute2/rt_tables; fi
+        post-up echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+        post-up echo 0 > /proc/sys/net/ipv6/conf/lo/disable_ipv6
+
+# The primary network interface
+auto eth0
+        iface eth0 inet6 auto
+	iface eth0 inet static 
+	address 10.0.0.1 
+	network 10.0.0.0
+	netmask 255.0.0.0
+	broadcast 10.255.255.255 
+	post-up route add -net 239.0.0.0 netmask 255.0.0.0 eth0
+	post-up route add -net 224.0.0.0 netmask 255.0.0.0 eth0
+	post-up if [ -z "`cat /etc/iproute2/rt_tables | grep eth0`" ]; then echo "100 eth0" >> /etc/iproute2/rt_tables; fi
+        post-up   ip route add default via 10.0.0.2 dev eth0 table eth0
+	post-up	  ip route add 10.0.0.0/8 dev eth0 src 10.0.0.1 table eth0 
+	post-up   ip rule add to 10.0.0.0/8 table eth0 prio 1
+	pre-down  ip rule del to 10.0.0.0/8
+	# post-up ip rule add from 10.0.0.2 table eth0 prio 1
+	post-up   ip route add 172.16.2.0/24 via 10.0.0.2 dev eth0 
+        post-up echo 1 > /proc/sys/net/ipv6/conf/eth0/disable_ipv6
+	post-up   ip route flush cache
+
+# The secondary network interface
+no-auto-down eth1
+allow-hotplug eth1
+auto eth1
+        iface eth1 inet6 auto
+	iface eth1 inet static 
+	address 177.220.156.178
+	netmask 255.255.255.248
+	# gateway 177.220.156.177
+	# metric 200
+	post-up if [ -z "`cat /etc/iproute2/rt_tables | grep eth1`" ]; then echo "101 eth1" >> /etc/iproute2/rt_tables; fi
+        post-up   ip route add default via 177.220.156.177 dev eth1 table eth1 
+	post-up   ip route add default via 177.220.156.177 dev eth1 metric 200
+	post-up	  ip route add 177.220.156.176/29 dev eth1 src 177.220.156.178 table eth1 
+        # post-up ip rule add from 177.220.156.178 table eth1 prio 1
+	post-up   ip rule add from 177.220.156.176/29 table eth1 prio 30000
+	pre-down  ip rule del from 177.220.156.176/29 
+        post-up   ip rule add to 177.220.156.176/29 table eth1 prio 1
+        pre-down  ip rule del to 177.220.156.176/29
+	post-up	  ip rule add fwmark 1 table eth1  prio 20000
+	pre-down  ip rule del fwmark 1 
+	post-up	  ip rule add fwmark 2 table eth1  prio 20000
+	pre-down  ip rule del fwmark 2 
+	post-up	  ip rule add fwmark 5 table eth1  prio 20000
+	pre-down  ip rule del fwmark 5 
+	post-up	  ip rule add fwmark 10 table eth1 prio 20000
+	pre-down  ip rule del fwmark 10 
+        post-up echo 1 > /proc/sys/net/ipv6/conf/eth1/disable_ipv6
+	post-up   ip route flush cache
+
+allow-hotplug eth2
+auto eth2
+        iface eth2 inet6 auto
+#       iface eth2 inet dhcp
+        iface eth2 inet static
+        address 192.168.1.251
+        netmask 255.255.255.0
+        # gateway 192.168.1.1
+        # metric 100
+        post-up if [ -z "`cat /etc/iproute2/rt_tables | grep eth2`" ]; then echo "102 eth2" >> /etc/iproute2/rt_tables; fi
+        post-up   ip route add default via 192.168.1.1 dev eth2 table eth2 
+	post-up   ip route add default via 192.168.1.1 dev eth2 metric 100 
+        post-up   ip route add 192.168.1.0/24 dev eth2 src 192.168.1.251 table eth2  
+        post-up   ip rule add to 192.168.1.0/24 table eth2 prio 1
+        pre-down  ip rule del to 192.168.1.0/24
+        #post-up   ip route add default nexthop via 192.168.1.1 dev eth2 weight 1 nexthop via 177.220.156.177 dev eth1 weight 1
+        #post-down ip route del default nexthop via 192.168.1.1 dev eth2 weight 1 nexthop via 177.220.156.177 dev eth1 weight 1
+	# post-up ip rule add from 192.168.1.252 table eth2 prio 1
+        post-up echo 1 > /proc/sys/net/ipv6/conf/eth2/disable_ipv6
+        post-up   ip route flush cache
+
+
+
+
+
+
+
+
+
+
+# Switch para eth1 total
+# ifdown eth2
+# ip route add default scope global nexthop via 177.220.156.177 dev eth1
+# Da pau... linhas abaixo
+# pre-down ip route add default scope global nexthop via 177.220.156.177 dev eth1 >> /dev/null > /dev/null
+# post-up   ip route del default scope global nexthop via 177.220.156.177 dev eth1 >> /dev/null > /dev/null
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#------------------------------------------------------------------------------------
+#http://brainscraps.wikia.com/wiki/Setup_Gateway_Routing_On_Multiple_Network_Interfaces
+#http://lartc.org/howto/lartc.rpdb.multiple-links.html
+#echo 1 > /proc/sys/net/ipv4/route/flush
+#ip rule add fwmark 0x4 table eth1
+#ip rule add from all fwmark 0x4 table eth1
+#ip route add default scope global nexthop via $P1 dev $IF1 weight 1 nexthop via $P2 dev $IF2 weight 1
+
+#------------------------------------------------------------------------------------
+# The secondary network interface SRV2
+#auto eth1:1
+#	iface eth1:1 inet static 
+#	address 177.220.156.178
+#	network 177.220.156.176
+#	netmask 255.255.255.248
+#	broadcast 177.220.156.182
+#	# gateway 177.220.156.177
+#------------------------------------------------------------------------------------
+# ADSL DESABILITADA
+#------------------------------------------------------------------------------------
+# The secondary network interface
+#auto eth1
+#	iface eth1 inet dhcp
+#	iface eth1 inet static 
+#	address 192.168.1.2
+#	network 192.168.1.0
+#	netmask 255.255.255.0
+#	broadcast 192.168.1.255 
+#	# gateway 192.168.1.1
+#auto dsl-provider
+#	iface dsl-provider inet ppp
+#	pre-up /sbin/ifconfig eth1 up # line maintained by pppoeconf
+#	provider dsl-provider
+#
+#
+#auto eth2
+#       iface eth2 inet dhcp
+#auto lo
+#iface lo inet loopback
+#	# dns-nameservers 127.0.0.1 10.0.0.1
+#	# dns-sortlist 200.0.0.0/255.0.0.0 201.0.0.0/255.0.0.0 177.0.0.0/255.0.0.0 179.0.0.0/255.0.0.0 189.0.0.0/255.0.0.0 187.0.0.0/255.0.0.0 186.0.0.0/255.0.0.0 143.0.0.0/255.0.0.0 67.220.0.0/255.255.0.0
+#	#Tenta 2 vezes com timeout de 4 (max 8segundos) sem pontuacao para searchdomain ou domain append
+#	# dns-options attempts:1 timeout:4 ndots:0
+#
+#------------------------------------------------------------------------------------
+# Comentarios talvez uteis
+#------------------------------------------------------------------------------------
+#auto eth1
+        # post-up ip route add 200.181.255.36 via 10.0.0.1 metric 100 dev eth0 onlink 	
+	# post-up  ip route add default dev eth0 via 10.0.0.1 onlink metric 1
+	# pre-down ip route del default dev eth0 via 10.0.0.1 onlink metric 1
+	# pre-down ip route flush dev eth0
+        # ip route add default dev eth0 via 10.0.0.1 onlink metric 14
+	# post-up ip route add to 10.0.8.0/21 dev eth0
+	# gateway 10.0.0.1
+	# ip route add default scope global nexthop dev ppp0 nexthop dev ppp1
+	# ip route add nat 192.203.80.144 via 193.233.7.83
+
+#iface eth1 inet static 
+#	address 192.168.1.2
+#	network 192.168.1.0
+#	netmask 255.255.255.0
+#	broadcast 192.168.1.255 
+#        # pre-down route add default gateway 10.0.0.1 metric 1 dev eth0
+#        # post-up   route del default gateway 10.0.0.1 metric 1 dev eth0
+#	# gateway 192.168.1.1
+
+ # iface eth0:1 inet static
+ #     address 192.168.0.200
+ #     network 192.168.0.0
+ #     netmask 255.255.255.0
+ #     up route add -net 192.168.1.118 netmask 255.255.255.128 gw 192.168.1.2
+ #     up route add default gw 192.168.1.200
+ #     down route del default gw 192.168.1.200
+ #     down route del -net 192.168.1.118 netmask 255.255.255.128 gw 192.168.1.2
+ #     up route add default gw 10.0.0.1
+ #     pre-up [ -f /etc/network/local-network-ok ] # Apenas ativa a interface se existir o arquivo
+ #     pre-up /path/to/check-mac-address.sh eth0 11:22:33:44:55:66
+ #     pre-down /path/to/check-mac-address.sh eth0 11:22:33:44:55:66
+
+ # auto eth0
+ # iface eth0 inet manual
+ #       up ifconfig eth2 0.0.0.0 up
+ #       up ip link set eth2 promisc on
+ #       down ip link set eth2 promisc off
+ #       down ifconfig eth2 down
+
+
+# http://linux-ip.net/html/nat-stateless.html#ex-nat-basic-commands
+# ip route add nat 205.254.211.17 via 192.168.100.17
+# ip rule add nat 205.254.211.17 from 192.168.100.17
+# ip route flush cache
+# ip route show table all | grep ^nat
+
+
+#ip route show table main | egrep -E "dev.*.eth0*proto kernel.*src" | while read net t1 dev t2 t3 t4 t5 t6 src; do ip route add $net dev $dev src $src table $dev ; done
+
+#ETH0 CUIDADO!
+        #post-up   ip rule  add from 10.0.0.0/8 table eth0 prio 30000
+        #pre-down ip rule  del from 10.0.0.0/8 
+        #post-up   ip rule  add to   10.0.0.0/8 table eth0 prio 10000
+        #pre-down ip rule  del to   10.0.0.0/8 
+      ##post-up   ip route add default scope global nexthop via 10.0.0.1 dev eth0
+#ETH1 CUIDADO!
+	#post-up   ip rule add to   177.220.156.176/29 table eth1 prio 10000
+	#pre-down ip rule del to   177.220.156.176/29 
+       #post-up   ip route add default scope global nexthop via 177.220.156.177 dev eth1
+#ETH2 CUIDADO
+        #post-up   ip rule  add from 192.168.1.0/24 table eth2 prio 30000
+        #pre-down ip rule  del from 192.168.1.0/24 
+        #post-up   ip rule  add to   192.168.1.0/24 table eth2 prio 10000
+        #pre-down ip rule  del to   192.168.1.0/24 
+

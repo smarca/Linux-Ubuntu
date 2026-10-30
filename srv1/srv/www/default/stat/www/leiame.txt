@@ -1,0 +1,2 @@
+ver /etc/apache2/sites-enabled/07-stat.conf
+SetHandler server-status

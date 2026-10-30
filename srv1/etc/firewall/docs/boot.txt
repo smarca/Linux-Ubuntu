@@ -1,0 +1,27 @@
+root (hd0)
+kernel /vmlinuz root=/dev/md0
+initrd /initrd.img
+boot
+
+root (hd0)
+kernel=/vmlinuz root=/dev/md0 initrd=/initrd.img
+boot
+
+
+#blkid -o list
+
+
+#?????
+sudo mount /dev/sda1 /mnt
+sudo mount --bind /dev /mnt/dev
+sudo mount --bind /proc /mnt/proc
+sudo mount --bind /sys /mnt/sys
+sudo chroot /mnt
+update-initramfs -u
+update-grub
+reboot
+
+
+##????
+Mudar de UUID= para LABEL=
+

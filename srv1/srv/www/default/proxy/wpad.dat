@@ -1,0 +1,31 @@
+//###########################################################################
+//#     Feito por Silmar A. Marca      smarca@gmail.com                     #
+//###########################################################################
+//#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+//#  *  Informe o autor sobre falhas ou incremento de funcoes            *  #
+//#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+//###########################################################################
+
+function FindProxyForURL(url, host) {
+    if (dnsDomainIs(host, ".localnet")) { 
+	return "DIRECT";
+    } else if (isPlainHostName(host)) {
+	return "DIRECT";
+    } else {
+	var resolved_ip = dnsResolve(host);
+	if ( isInNet(resolved_ip,"127.0.0.0","255.255.255.0") || isInNet(resolved_ip,"10.0.0.0","255.0.0.0") || isInNet(resolved_ip,"172.16.0.0","255.240.0.0") || isInNet (resolved_ip,"192.168.0.0","255.255.0.0") ) {
+	    return "DIRECT";
+	} else if (isInNet(resolved_ip, "177.220.156.176", "255.255.255.248")) {
+	    return "DIRECT";
+	} else if (isInNet(myIpAddress(), "10.0.0.0", "255.0.0.0")) {
+	    return "PROXY 10.0.0.1:3128; PROXY 10.0.0.2:3128";
+	} else if (isInNet(myIpAddress(), "172.16.1.0", "255.255.255.0")) {
+	    return "PROXY 172.16.1.1:3128";
+	} else if (isInNet(myIpAddress(), "172.16.2.0", "255.255.255.0")) {
+	    return "PROXY 172.16.2.1:3128";
+	} else {
+	    return "PROXY proxy.A.localnet:3128";
+	}
+    }
+}
+

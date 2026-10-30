@@ -15,7 +15,7 @@ EMAIL=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
 REPLYTO=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
 MAILTO=alerta@`/bin/hostname`.`/bin/dnsdomainname`
 TMPDIR=/tmp
-MAILTO="smarca@gmail.com" ; copiaerr=alerta@`/bin/hostname`.`/bin/dnsdomainname` ; copiaerr2=root@`/bin/hostname`.`/bin/dnsdomainname`
+MAILTO="renatomsouto@gmail.com" ; copiaerr=alerta@`/bin/hostname`.`/bin/dnsdomainname` ; copiaerr2=root@`/bin/hostname`.`/bin/dnsdomainname`
 export EMAIL REPLYTO MAILTO LOGNAME TMPDIR
 
 #Quais diretorios a fazer backup. Mascaras nao valem para iarq. Usar expressao regexp. Ex. (.*) para todos os tipos
@@ -105,22 +105,25 @@ for (( i=0; i<${#src[@]}; i++ )); do # for item in "${src[@]}"; do
     # date > ${idst}/${arq}.log	#Cuidado.. modifica arquivos de log
     find "./$arq" -iregex "${iarq[$i]}" -print  | zip -X ${idst}/${PREFIX}${arq}${prf[$i]}.zip -@ >> ${idst}/${arq}.log 2>> ${idst}/${arq}.log
     err=$?
+    # date >> ${idst}/${arq}.log   	#Cuidado, modifica arquivos de log
     if [ $err -eq 12 ]; then
         logger -p cron.err -t ERRO BACKUP: Comando ZIP err $err: ${idst}/${PREFIX}${arq}${prf[$i]}.zip - $dir/$arq/
-	#echo													>> ${LOGDIR}
-	#echo ====================================================================				>> ${LOGDIR}
-        #echo AVISO BACKUP: Comando ZIP nao encontrou os arquivos solicitados na origem.				>> ${LOGDIR}
-	#echo Origem : $dir/$arq/										>> ${LOGDIR}
-	#echo Mascara Inclusao: \'${iarq[$i]}\' 									>> ${LOGDIR}
-	#echo Mascara Exclusao: \'${earq[$i]}\'									>> ${LOGDIR}
-	#echo Destino: ${idst}/${PREFIX}${arq}${prf[$i]}.zip 							>> ${LOGDIR}
-	#echo 													>> ${LOGDIR}
-	#echo Efetuando por seguranca backup completo de todos os arquivos da origem, exceto exclusao...		>> ${LOGDIR}
-        #echo Por favor verifique se a copia foi feita com seguranca no destino. 				>> ${LOGDIR}
-        #echo --------------------------------------------------------------------				>> ${LOGDIR}
-        #zip -X -rn ${earq[$i]} ${idst}/${PREFIX}${arq}${prf[$i]}.zip ./$arq/ >> ${idst}/${arq}.log 2>> ${idst}/${arq}.log
-        #cat ${idst}/${arq}.log											>> ${LOGDIR}
-	#echo													>> ${LOGDIR}
+	echo													>> ${LOGDIR}
+	echo ====================================================================				>> ${LOGDIR}
+        echo AVISO BACKUP: Comando ZIP nao encontrou os arquivos solicitados na origem.				>> ${LOGDIR}
+	echo Origem : $dir/$arq/										>> ${LOGDIR}
+	echo Mascara Inclusao: \'${iarq[$i]}\' 									>> ${LOGDIR}
+	echo Mascara Exclusao: \'${earq[$i]}\'									>> ${LOGDIR}
+	echo Destino: ${idst}/${PREFIX}${arq}${prf[$i]}.zip 							>> ${LOGDIR}
+	echo 													>> ${LOGDIR}
+	echo Efetuando por seguranca backup completo de todos os arquivos da origem, exceto exclusao...		>> ${LOGDIR}
+        echo Por favor verifique se a copia foi feita com seguranca no destino. 				>> ${LOGDIR}
+        echo --------------------------------------------------------------------				>> ${LOGDIR}
+        # date > ${idst}/${arq}.log
+        zip -X -rn ${earq[$i]} ${idst}/${PREFIX}${arq}${prf[$i]}.zip ./$arq/ >> ${idst}/${arq}.log 2>> ${idst}/${arq}.log
+        # date >> ${idst}/${arq}.log
+        cat ${idst}/${arq}.log											>> ${LOGDIR}
+	echo													>> ${LOGDIR}
     elif [ ! $err -eq 0 ]; then
         logger -p cron.err -t ERRO BACKUP: Comando ZIP err $err: ${idst}/${PREFIX}${arq}${prf[$i]}.zip - $dir/$arq/
 	echo													>> ${LOGDIR}

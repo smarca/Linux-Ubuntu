@@ -1,0 +1,22 @@
+Esta pasta se chama "sistema", em minusculo!!!!
+
+Todos os arquivos podem ser deletados desta pasta, menos este.
+Assim, esta pasta tambem nao pode ser deletada por ser sincronizada em outro servidor e ter backup diario.
+
+Entenda o SRV1:
+\\srv1\bkup\Suporte\srv1\bkp-prg : backup noturno das sub pastas de \\srv1\prog\sistema
+\\srv1\bkup\Suporte\srv2\bkup    : copia dos backups noturnos existentes no outro servidor, caminho de rede \\srv2\bkup\Suporte\srv2
+\\srv1\bkup\Suporte\srv2\prog    : copia simples, sincronizada aproximadamente de hora em hora dos arquivos de \\srv2\prog\sistema
+
+Entenda o SRV2:
+\\srv2\bkup\Suporte\srv2\bkp-prg : backup noturno das sub pastas de \\srv2\prog\sistema
+\\srv2\bkup\Suporte\srv2\bkp-bd  : backup noturno do banco de dados do firebird, contendo inclusive o /srv/bdfirebird/*.fdb
+\\srv2\bkup\Suporte\srv1\bkup    : copia dos backups noturnos existentes no outro servidor, caminho de rede \\srv1\bkup\Suporte\srv1
+\\srv2\bkup\Suporte\srv1\prog    : copia simples, sincronizada aproximadamente de hora em hora dos arquivos de \\srv1\prog\sistema
+
+Por que esta estruturado assim?
+- Se um dos servidores parar, os sistemas funcionam apenas copiando os arquivos da hora anterior que foram sincronizados. Poucas horas de trabalho serao perdidas.
+  Mas se algo der errado, veja o backup noturno!
+- Em caso de queimar geral um dos servidores, seus backups estao tambem em outro servidor, sendo possivel acessar o historico dos sistemas.
+
+Att. Silmar

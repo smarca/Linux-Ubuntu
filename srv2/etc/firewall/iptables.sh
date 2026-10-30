@@ -24,7 +24,7 @@
 #sdparm --set=WCE /dev/sda
 #ethtool eth0
 
-DATAVER="07/11/2017-A"
+DATAVER="06/11/2016-A"
 VERSAO="Firewall -> (smarca@gmail.com)  [60G[[1;33m$DATAVER[0;39m]"
 # http://www.lartc.org/
 
@@ -286,8 +286,6 @@ DSHIELD () {
 DYNACCHST () {
   log_action_begin_msg "DYNIP Acc Hst " && {
     if [ -z "$*" ]; then
-        #Inicializacao
-        $IPTABLES -w -t nat -F PREROUTING-DYN-E 2> /dev/null 				   ; $IPTABLES -w -t nat -N PREROUTING-DYN-E 2> /dev/null
         $IPTABLES -w -t filter -F DYN_ECT 2> /dev/null                                     ; $IPTABLES -w -t filter -N DYN_ECT 2> /dev/null
 	#Associacoes por redes internas ou clientes ou servidores
         $ROUTE -n | $EGREP -E "^[[:digit:]]" | $EGREP -E -v  "(^((0|127|224|239)[.]0[.])|(UH|UG))" | while read dest1 gw1 mask1 op1 met1 ref1 uso1 dev1; do #Redes Locais
@@ -297,12 +295,10 @@ DYNACCHST () {
 
     #Sempre dar Flush antes
     $IPTABLES -w -t filter -F DYN_ECT 2> /dev/null
-    $IPTABLES -w -t nat -F PREROUTING-DYN-E 2> /dev/null
 
     #Inicialmente sem log, apenas acesso o mais simples possivel
     grfile_params $F_ACCDYN | while read hst comment; do
         $IPTABLES -w -t filter -A DYN_ECT -d $hst -j ACCEPT
-        $IPTABLES -w -t nat -A PREROUTING-DYN-E -d $hst -j RETURN
     done
   } &&  log_action_end_msg $?
 }
@@ -503,62 +499,48 @@ NAT () {
     $IPTABLES -w -t nat -F POSTROUTING-SNAT-I 2> /dev/null ; $IPTABLES -w -t nat -N POSTROUTING-SNAT-I 2> /dev/null
     $IPTABLES -w -t nat -F POSTROUTING-SNAT-E 2> /dev/null ; $IPTABLES -w -t nat -N POSTROUTING-SNAT-E 2> /dev/null
     #Portas redir em si
-    grfile_params "$F_REDIR1 $F_REDIR2" | while read prot dportori dnetori dnetdest dportredir dredir dtype comment;do
+    grfile_params "$F_REDIR1 $F_REDIR2" | while read prot dportori dnetori dportredir dredir dtype comment;do
 	if [ "$dredir" != "-" -a -z "`echo .$dnetori. | $EGREP -E /`" ]; then 	#Apenas aqueles que nao ha redirecionamentos tipo desvio do squid proxy transparente ou de qualquer origem
 	    #--------------------------------------------------------------
 	    #-- Achar protocolo
-            prot=${prot/-/all} 
-            #-- Destino especifico
-            if [ "$dnetdest" != "-" ]; then
-                DDH="-d $dnetdest" ; DSH="-d $dnetdest" ; DHH="$dnetdest"
-            else
-                DDH="" ; DSH="" ; DHH=""
-            fi
-            #-- Origem Especifica
-            if [ "$dnetori" != "-" ]; then
-                SSH="-s $dnetori" ; SDH="-d $dnetori" ; SHH="$dnetori"
-            else
-                SSH="" ; SDH="" ;  SHH=""
-            fi
-            #-- Porta original em que a conexao vem
-            if [ "$dportori" != "-" ]; then
-                OPP=":$dportori"
-                if [ ! -z "`echo .$dportori. | $EGREP -E ,`" ]; then
-                    ODP="-m multiport --dports $dportori" ;     OSP="-m multiport --sports $dportori"
-                elif [ "$prot" == "icmp" ]; then
-                    ODP="--icmp-type $dportori";                OSP="--icmp-type $dportori"
-                else
-                    ODP="--dport $dportori" ;                   OSP="--sport $dportori"
-                fi
-            else
-                ODP="" ; OSP="" ; OPP=""
-            fi
-            #-- Porta redirecionada em que a conexao vai
-            if [ "$dportredir" != "-" ]; then
-                RPP=":$dportredir"
-                if [ ! -z "`echo .$dportredir. | $EGREP -E ,`" ]; then
-                    RDP="-m multiport --dports $dportredir" ;   RSP="-m multiport --sports $dportredir"
-                elif [ "$prot" == "icmp" ]; then
-                    RDP="--icmp-type $dportredir";              RSP="--icmp-type $dportredir"
-                else
-                    RDP="--dport $dportredir" ;                 RSP="--sport $dportredir"
-                fi
-            else
-                RDP="" ; RSP="" ; RPP=""
-            fi
+    	    prot=${prot/-/all}
+    	    #-- Porta original em que a conexao vem
+    	    if [ "$dportori" != "-" ]; then
+    	        OPP=":$dportori"
+    	        if [ ! -z "`echo .$dportori. | $EGREP -E ,`" ]; then
+    		    ODP="-m multiport --dports $dportori" ; 	OSP="-m multiport --sports $dportori"  
+		else
+    	    	    ODP="--dport $dportori" ;			OSP="--sport $dportori" 
+		fi
+    	    else 
+	        ODP="" ; OSP="" ; OPP=""
+	    fi
+    	    #-- Porta redirecionada em que a conexao vai. Repete caso nao exista
+    	    if [ "$dportredir" != "-" ]; then 
+    	        RPP=":$dportredir"
+    	        if [ ! -z "`echo .$dportredir. | $EGREP -E ,`" ]; then
+    		    RDP="-m multiport --dports $dportredir" ; 	RSP="-m multiport --sports $dportredir"  
+		else
+    	    	    RDP="--dport $dportredir" ; 		RSP="--sport $dportredir" 
+		fi
+    	    else
+	        RDP="$ODP" ; RSP="$OSP" ; RPP=""
+	    fi
 
 	    #-- Achar Ip da Interface
 	    dredir=`grok_addr $dredir`	#Pega o ip caso seja uma interface
   	    #echo RDP: $RDP - ODP: $ODP - OSP: $OSP - RSP: $RSP 
 	    #--------------------------------------------------------------
 	    #Readaptar porta de origem para multiportas
-	    if [ "${RPP}" != "" -a "$dportredir" != "$dportori" -o "$DDH" != "" ]; then
-		$IPTABLES -w -t nat -A POSTROUTING-SNAT-E -p $prot -s $dredir $OSP $SDH -j SNAT --to-source ${DHH}${RPP} #--persistent 
+	    if [ "${RPP}" != "" -a "${RPP}" != "-" ]; then
+    		$IPTABLES -w -t nat -A POSTROUTING-SNAT-E -p $prot -s $dredir $OSP -j SNAT --to-source ${RPP} #--persistent 
 	    fi
 	    #Readaptacao de Source para enderecos sem rota e internos
 	    if [ "$dtype" != "" -a "$dtype" != "-" ]; then
-           	$IPTABLES -w -t nat -A POSTROUTING-SNAT-E -p $prot -d $dredir $RDP $SSH -o $dtype -j MASQUERADE
-    	       #$IPTABLES -w -t nat -A POSTROUTING-SNAT-E -p $prot -d $dredir $RDP $SSH -j SNAT --to-source `grok_addr $dtype` #--persistent 
+    		if [ ! -z "`echo .$DEV_EXT.$DEV_ADM.$DEV_CLI.$DEV_SRV.$DEV_MSQSRV. | $EGREP -E ""$dtype""`" ]; then
+    	    	    $IPTABLES -w -t nat -A POSTROUTING-SNAT-E -p $prot -d $dredir $RDP -j SNAT --to-source `grok_addr $dtype` #--persistent 
+		    #ANTIGO: $IPTABLES -w -t nat -A POSTROUTING-SNAT-E -p $prot -d $dredir $RDP -o $dtype -j MASQUERADE
+		fi 
 	    fi
 	#else
 	#    echo "ERRO Redir NAT: $prot $dportori $dnetori $dportredir $dredir $dtype $comment"
@@ -637,28 +619,14 @@ REDIR () {
     done
 
     #Portas redir em si
-    grfile_params "$F_REDIR1 $F_REDIR2" | while read prot dportori dnetori dnetdest dportredir dredir dtype comment;do
+    grfile_params "$F_REDIR1 $F_REDIR2" | while read prot dportori dnetori dportredir dredir dtype comment;do
 	    #--------------------------------------------------------------
     	    prot=${prot/-/all}
-            #-- Destino especifico
-            if [ "$dnetdest" != "-" ]; then
-                DDH="-d $dnetdest" ; DSH="-d $dnetdest" ; DHH="$dnetdest"
-            else
-                DDH="" ; DSH="" ; DHH=""
-            fi
-            #-- Origem Especifica
-            if [ "$dnetori" != "-" ]; then
-                SSH="-s $dnetori" ; SDH="-d $dnetori" ; SHH="$dnetori"
-            else
-                SSH="" ; SDH="" ;  SHH=""
-            fi
     	    #-- Porta original em que a conexao vem
     	    if [ "$dportori" != "-" ]; then
     	        OPP=":$dportori"
     	        if [ ! -z "`echo .$dportori. | $EGREP -E ,`" ]; then
     		    ODP="-m multiport --dports $dportori" ; 	OSP="-m multiport --sports $dportori"  
-                elif [ "$prot" == "icmp" ]; then
-                    ODP="--icmp-type $dportori";              	OSP="--icmp-type $dportori"
 		else
     	    	    ODP="--dport $dportori" ;			OSP="--sport $dportori" 
 		fi
@@ -670,8 +638,6 @@ REDIR () {
     	        RPP=":$dportredir"
     	        if [ ! -z "`echo .$dportredir. | $EGREP -E ,`" ]; then
     		    RDP="-m multiport --dports $dportredir" ; 	RSP="-m multiport --sports $dportredir"  
-                elif [ "$prot" == "icmp" ]; then
-                    RDP="--icmp-type $dportredir";              RSP="--icmp-type $dportredir"
 		else
     	    	    RDP="--dport $dportredir" ; 		RSP="--sport $dportredir" 
 		fi
@@ -682,10 +648,10 @@ REDIR () {
 	    #Loop de Redirecionamentoss
             if [ "$dredir" != "-" ]; then 
 		dredir=${dredir/-/`grok_addr $dredir 127.0.0.1`}		#Pega o ip caso seja uma interface
-	        $IPTABLES -w -t nat -A PREROUTING-DNAT -p $prot $SSH $ODP $DDH -j DNAT --to-destination ${dredir}${RPP} #--persistent
+	        $IPTABLES -w -t nat -A PREROUTING-DNAT -p $prot $ODP -j DNAT --to-destination ${dredir}${RPP} #--persistent
 	        #$IPTABLES -w -t nat -A OUTPUT-DNAT    -p $prot $ODP -j DNAT --to-destination ${dredir}${RPP} #--persistent
 	    else
-		$IPTABLES -w -t nat -A PREROUTING-RDR-E -p $prot $SSH $ODP $DDH -j REDIRECT --to-ports ${dportredir/-/$dportori} -m mark ! --mark 100 #Apenas Externo
+		$IPTABLES -w -t nat -A PREROUTING-RDR-E -p $prot $ODP -j REDIRECT --to-ports ${dportredir/-/$dportori} -m mark ! --mark 100 #Apenas Externo
 	    fi
 	    #--------------------------------------------------------------
 	done
@@ -1742,8 +1708,6 @@ ACESSOS () {
     	    while [[ $atipo -le $ntipo ]]; do
         	case ${tipo:$atipo:3} in 
             	  SCT)                    		#Acoes como Cliente (Liberacao)
-		    IPdsthst=${IPdsthst/-/"0.0.0.0/0"}
-		    src=${src/-/"0.0.0.0/0"}
     		    if [ "`ismac $src`" == "1" ]; then 
 		        if [ "${log}" != "-" ]; then  $IPTABLES -w -t filter -A ${tipo:$atipo:3}         -p $prot $DP -m mac --mac-source $src -d $IPdsthst $LOG_LIMIT1_COMMAND acc-${log} $LOG_LIMIT2_COMMAND -j LOG --log-level 7 --log-prefix "Pkt: flag=acc-${tipo:$atipo:3}-${log} " --log-tcp-options --log-ip-options  --log-uid ; fi
 		                                      $IPTABLES -w -t filter -A ${tipo:$atipo:3}         -p $prot $DP -m mac --mac-source $src -d $IPdsthst -j ACCEPT

@@ -1,0 +1,94 @@
+##########################################################################
+#     Feito por Silmar A. Marca      marca@gmail.com                     #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe ao autor sobre falhas ou incremento de funcoes           *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+#                  Runtime configuration file for Exim                    #
+###########################################################################
+
+# Basic system aliases -- these MUST be present.
+
+ftpmaster:      hostmaster
+admin:          hostmaster
+administrator:  hostmaster
+hostmaster:     root
+
+ftpadm:         ftp
+ftpadmin:       ftp
+ftp-adm:        ftp
+ftp-admin:      ftp
+ftp:            root
+
+newsadm:        news
+newsadmin:      news
+usenet:         news
+news:           root
+
+MAILER-DAEMON:  postmaster
+mail:           postmaster
+exim:           postmaster
+postfix:        postmaster
+qmail:          postmaster
+uucp:           postmaster
+mailnull:       postmaster
+abuse:          postmaster
+mailauth-reports: postmaster
+postmaster:     root
+webmaster:      www
+apache:         www
+gopher:         www
+http:           www
+www:            informativo@monital.com.br
+
+# Antivirus
+clamav: root
+
+# BD
+mysql:          bdadm
+postgress:      bdadm
+psql:           bdadm
+bdadm:          root
+
+# General redirections for pseudo accounts.
+noc:            root
+security:       root
+bin:            root
+daemon:         root
+adm:            root
+lp:             root
+sync:           root
+shutdown:       root
+halt:           root
+operator:       root
+manager:        root
+toor:           root
+system:         root
+decode:         root
+nobody:         root
+games:          root
+named:          root
+xfs:            root
+gdm:            root
+squid:          root
+dumper:         root
+
+staff:          support
+office:         support
+all:            support
+tech:           support
+ops:            support
+support:	root
+suporte:	root
+
+# Person who should get root's mail
+# root: suporte@monital.com.br
+root: marca
+
+#Servidores Apelidos locais
+srv1: marca@srv1.metropol.com.br
+srv2: marca@srv2.metropol.com.br
+
+#Emails externos
+alerta: smarca@gmail.com

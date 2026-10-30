@@ -1,0 +1,133 @@
+/var/log/dhcpd/dhcpd.log {
+        minsize 30M
+        size 50M
+	missingok
+	rotate 50
+	compress
+	delaycompress
+	notifempty
+	# create 640 root root 
+}
+
+/var/log/firewall/martian.log {
+        minsize 10M
+        size 25M
+	missingok
+	rotate 10
+	compress
+	delaycompress
+	notifempty
+	# create 640 root root 
+}
+
+/var/log/smartd/smartd.log {
+        minsize 10M
+        size 25M
+	missingok
+	rotate 10
+	compress
+	delaycompress
+	notifempty
+	# create 640 root root 
+}
+
+/var/log/upnpd/upnpd.log {
+        minsize 10M
+        size 15M
+	missingok
+	rotate 10
+	compress
+	delaycompress
+	notifempty
+	# create 640 root root 
+}
+
+/var/log/rsync/rsync.log /var/log/rsync/rsyncd.log {
+        minsize 10M
+        size 30M
+	missingok
+	rotate 5
+	compress
+	delaycompress
+	notifempty
+	# create 640 root root 
+}
+
+/var/log/cron/cron.log {
+        minsize 10M
+        size 15M
+	missingok
+	rotate 5
+	compress
+	delaycompress
+	notifempty
+	# create 640 root root 
+}
+
+/var/log/horde/horde.log {
+        minsize 10M
+        size 50M
+	missingok
+	rotate 10
+	compress
+	delaycompress
+	notifempty
+}
+
+/var/log/mail/mail.log {
+        minsize 10M
+        size 50M
+	missingok
+	rotate 10
+	compress
+	delaycompress
+	notifempty
+	# create 640 root root 
+        #postrotate
+        #        /etc/init.d/dovecot start > /dev/null
+        #endscript
+        #prerotate
+	#	/etc/init.d/rsyslog restart > /dev/null
+        #        /etc/init.d/dovecot stop > /dev/null
+        #endscript
+}
+
+/var/log/firewall/firewall-invalid.log {
+        minsize 10M
+        size 50M
+        missingok
+        rotate 2
+        compress
+        delaycompress
+        notifempty
+        # create 640 root root
+        postrotate
+            /etc/init.d/rsyslog rotate > /dev/null
+        endscript
+}
+
+/var/log/firewall/firewall.log {
+        minsize 10M
+        size 30M
+	missingok
+	rotate 10
+	compress
+	delaycompress
+	notifempty
+	# create 640 root root 
+        postrotate
+	    /etc/init.d/rsyslog rotate > /dev/null
+        endscript
+}
+
+
+/var/log/commands/commands.log {
+        minsize 50M
+        size 250M
+        missingok
+        rotate 50
+        compress
+        delaycompress
+        notifempty
+        # create 640 root root
+}

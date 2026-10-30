@@ -1,0 +1,6 @@
+#ifconfig -a
+#lshw -class network | egrep -e "(serial|name|capacity|product)"
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="00:21:9b:fa:85:0a", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="f8:1a:67:04:9d:f1", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth1"
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="90:f6:52:e0:40:3d", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth2"
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="90:f6:52:e0:3f:de", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth10"

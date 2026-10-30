@@ -1,0 +1,133 @@
+#!/bin/bash
+###########################################################################
+#     Feito por Silmar A. Marca     smarca@gmail.com                      #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe ao autor sobre falhas ou incremento de funcoes           *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+#Limpar backups antigos -> find -type f | egrep -v "(_15|_01)" | xargs rm
+
+# Firebird.conf
+#  	DefaultDbCachePages = 8192
+exit 
+
+#--[Def Global]------------------------------------------------------------
+#Flush do disco
+sync
+
+#Dia, Mes, Ano
+DD=`/bin/date +%d`
+MM=`/bin/date +%m`
+AA=`/bin/date +%Y`
+SS=`/bin/date +%w`
+
+#Hosts a fazer mirror
+HST_LOCAL=`uname -n`
+HST_MIRROR="med.universalpneus.com.br"
+HST_USER="bkpbd"
+HST_PWD="BKP856.gsn"
+#useradd -g users -m -d /srv/smb/bkp -s /bin/logdeny bkpbd -c "Usuario Backup Banco de Dados"; chown bkpbd.users ~bkpbd/* -R; passwd bkpbd
+
+#Tipo do mirror (se comentar, recebe)
+ENVIA="sim"
+
+#Escrever ou nao em cd (0=nao escreve, 1=escreve)
+WRITECD="1"
+
+#Acha a senha do BD
+if [ -f /etc/rc.d/init.d/firebird ]; then
+    FPASS=`cat /etc/rc.d/init.d/firebird | grep "ISC_PASSWORD=" | cut -d"=" -f2`
+    FUSER=`cat /etc/rc.d/init.d/firebird | grep "ISC_USER=" | cut -d"=" -f2`
+    CMDGBK="/opt/firebird/bin/gbak"
+else
+    FPASS=`cat /etc/rc.d/init.d/interbase | grep "ISC_PASSWORD=" | cut -d"=" -f2`
+    FUSER=`cat /etc/rc.d/init.d/interbase | grep "ISC_USER=" | cut -d"=" -f2`
+    CMDGBK="/opt/interbase/bin/gbak"
+fi
+
+#Define diretorio e arquivos do bd
+SRC_BD=/srv/bd/
+SRC_BDARQ=`ls ${SRC_BD} | egrep -i "[.]gdb$"`
+
+#Define diretorio do backup
+DST_BASE=/srv/smb/bkp
+DST_HOJE=/${AA}/${MM}/
+
+#Cria diretorio de Backup
+mkdir -p ${DST_BASE}/${HST_LOCAL}/${DST_HOJE}
+chown -R ${HST_USER}.users ${DST_BASE}
+cd ${DST_BASE}
+
+#Backup LOCAL
+for DBASE in ${SRC_BDARQ}; do 
+    NARQSRC=127.0.0.1:${SRC_BD}${DBASE}
+    NARQBKP=${DST_BASE}/${HST_LOCAL}/${DST_HOJE}/`basename ${DBASE} .gdb`_${DD}-${MM}-${AA}.bk
+    if [ ! -f ${NARQBKP}.gz ]; then
+	${CMDGBK} ${NARQSRC} ${NARQBKP} -user ${FUSER} -password ${FPASS}
+	gzip ${NARQBKP}
+    fi
+    chown -R ${HST_USER}.users ${DST_BASE}
+    sync
+done
+
+#Mirror Remoto
+for MIRRORS in ${HST_MIRROR}; do
+    #ENVIO DE ARQUIVOS (Todos Dias da Semana)
+    if [ "${SS}" != "0" ]; then
+        lftp -e "mput -d -c     ./${HST_LOCAL}/${DST_HOJE}/* ; quit" -u ${HST_USER},${HST_PWD} ${MIRRORS} > /dev/null
+    fi
+
+    #RECEBIMENTO DE ARQUIVOS (Final de semana)
+    if [ "${SS}" == "0" ]; then
+	sleep 15m
+        lftp -e "mirror -c ./${HST_MIRROR}/ ./ ; quit" -u ${HST_USER},${HST_PWD} ${MIRRORS} > /dev/null
+        chown -R ${HST_USER}.users ${DST_BASE}
+    fi
+    sync
+done
+
+#Flush do disco
+sync
+
+#--[Backup CDROM]----------------------------------------------------------
+#blank=all
+if [ "${SS}" != "0" ]; then
+    if [ "${WRITECD}" != "0" ]; then
+        #Espera chegar arquivo
+        if [ ! -z "$HST_MIRROR" ]; then
+	   sleep 2h
+        fi
+	#Copiar os arquivos necessarios
+	for ARQUIVOX in `ls ./*/${DST_HOJE}/*_${DD}-${MM}-${AA}.*`; do
+    	    DIRETORIOX=`dirname ${ARQUIVOX}`
+    	    mkdir -p ${DST_BASE}/tmpiso/${DIRETORIOX}
+    	    cp ${ARQUIVOX} ${DST_BASE}/tmpiso/${DIRETORIOX}
+	done
+	#Criar ISO
+	mkisofs -J -r -volset ${AA}${MM}${DD} -V "BK"${DD}-${MM}-${AA} -o ${DST_BASE}/${DD}${MM}${AA}.iso ${DST_BASE}/tmpiso/ > /dev/null 2> /dev/null
+	#Sync
+	sync; sync
+	#Carregar Modulo CDRW ( /etc/modules.conf; alias scd0 srmod; alias scsi_hostadapter ide-scsi; options ide-cd ignore=hdd)
+	rmmod ide-scsi sg  cdrom ide-cd	> /dev/null 2> /dev/null #Descarrega Modulos Antigos
+	modprobe ide-scsi sg 		> /dev/null 2> /dev/null #Carrega Modulos
+	DEVCDROM="0,0,0" 	#Detectar CD (dev="cdrecord -scanbus") (/dev/scd0)
+        if [ ! -z "`cdrecord -atip dev=${DEVCDROM} 2> /dev/null | grep 'Is erasable'`" ]; then
+	    #Limpar CD RW rapidamente (fast) ou completamente (all)
+	    if [ "${SS}" != "1" ]; then
+		cdrecord --dev=${DEVCDROM} --blank=fast > /dev/null 2> /dev/null
+	    else
+		cdrecord --dev=${DEVCDROM} --blank=all  > /dev/null 2> /dev/null
+	    fi
+	fi
+	#Gravar CDROM
+	cdrecord -v speed=8 dev=${DEVCDROM} -eject -data ${DST_BASE}/${DD}${MM}${AA}.iso > /dev/null 2> /dev/null
+	#Remover ISO
+	rm -rf ${DST_BASE}/tmpiso/
+	rm -f ${DST_BASE}/${DD}${MM}${AA}.iso
+	#Descarregar modulos
+	rmmod ide-scsi sg  cdrom ide-cd	> /dev/null 2> /dev/null #Descarrega Modulos Antigos
+    fi
+fi
+
+exit 0

@@ -1,0 +1,10 @@
+/var/log/exim4/mainlog /var/log/exim4/rejectlog {
+        size 100M
+	monthly
+	missingok
+	rotate 50
+	compress
+	delaycompress
+	notifempty
+	create 640 Debian-exim adm
+}

@@ -1,0 +1,6 @@
+#Nao efetua checagem de Graylist para determinados hosts inversos
+
+*.blackberry.com
+*@dmarc.*
+#*.gov.br
+#*.jus.br

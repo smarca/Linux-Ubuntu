@@ -1,0 +1,8 @@
+#-- htpasswd -c /srv/www/default/stat/.htpasswd usuario
+#-- htdigest /srv/www/default/access/.htdigest "Estatisticas" usuario
+marca:Mdm3 Srv2 - 192.168.254.1:b1ebcef233aa2975497b64bbe3a7681a
+marca:Mdm2 Srv2 - 192.168.1.1:eab6b9505faf2d2db51d8994cf6f9c6c
+marca:Painel Password:3de9baf000cad604fdb05409338d800c
+marca:Stat Password:84cc8e74b4503e10e099985d631fdc57
+renato:Stat Password:446be445d32eee9e54b250df854e9f54
+suporte:Stat Password:5e45fe5bc909a45f6d9a27632809bfa1

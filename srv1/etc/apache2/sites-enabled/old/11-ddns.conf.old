@@ -1,0 +1,49 @@
+###########################################################################
+#     Feito por Silmar A. Marca      marca@grupogsn.com.br                #
+#     http://www.grupogsn.com.br/  suporte@grupogsn.com.br                #
+###########################################################################
+#  *  A remocao destas linhas implica na nao observacao da licenca GNU *  #
+#  *  Informe o autor sobre falhas ou incremento de funcoes            *  #
+#  *  Respeite a propriedade intelectual, http://www.gnu.org/          *  #
+###########################################################################
+
+<VirtualHost *:80>
+    DirectoryIndex index.php
+    ServerAlias ddns.* 
+    DocumentRoot "/srv/www/default/ddns/"
+    HostnameLookups off
+    CookieTracking off
+    # CheckSpelling off
+    ContentDigest off
+    FileETag None
+    LogFormat "%v %h %{cookie}n %t \"%r\" %>s %b %T \"%{Referer}i\" \"%{User-Agent}i\"" logdns
+    CustomLog /var/log/apache2/ddnsaccess.log logdns
+    ErrorLog  /var/log/apache2/ddnserrors.log 
+    RewriteEngine on
+    RewriteCond %{REQUEST_URI} !/index.php$
+    RewriteRule $ /index.php [R=307,L]
+</VirtualHost>
+
+<Directory "/srv/www/default/ddns/">
+   Require all granted
+   AllowOverride FileInfo AuthConfig Limit 
+   CookieTracking off
+   CookieTracking off
+   # CheckSpelling off
+   ContentDigest off
+   FileETag None
+    <IfModule mod_php5.c>
+        AddType application/x-httpd-php .php
+        php_admin_flag  engine             "On"
+        php_admin_flag  display_errors     "On"
+        php_admin_value open_basedir       "/tmp:/srv/www/default/ddns/"
+        php_admin_value error_log          "/tmp/phperr.ddns"
+        #php_admin_flag register_globals     On
+    </IfModule>
+   AuthType Basic
+   AuthName "Metropol DDNS"
+   AuthUserFile /srv/www/default/access/.htpasswd
+   Require valid-user
+
+</Directory>
+

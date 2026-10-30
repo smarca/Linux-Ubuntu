@@ -13,7 +13,7 @@ REPLYTO=marca@`/bin/hostname -s`.`/bin/dnsdomainname`
 MAILTO=alerta@`/bin/hostname`.`/bin/dnsdomainname`
 TMPDIR=/tmp
 MAILTO="renatomsouto@gmail.com" ; copiaerr=alerta@`/bin/hostname`.`/bin/dnsdomainname` ; copiaerr2=root@`/bin/hostname`.`/bin/dnsdomainname`
-MAILTO="smarca@gmail.com" ; copiaerr=alerta@`/bin/hostname`.`/bin/dnsdomainname` ; copiaerr2=root@`/bin/hostname`.`/bin/dnsdomainname`
+#MAILTO="smarca@gmail.com" ; copiaerr=alerta@`/bin/hostname`.`/bin/dnsdomainname` ; copiaerr2=root@`/bin/hostname`.`/bin/dnsdomainname`
 export EMAIL REPLYTO MAILTO LOGNAME TMPDIR
 
 #Diretorios

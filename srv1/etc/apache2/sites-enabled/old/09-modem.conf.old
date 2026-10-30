@@ -1,0 +1,294 @@
+##---------------------------------------------------------------------------------
+##- SERVIDOR 1 - Acesso direto via internet: daqui vai para o modem 
+#<VirtualHost *:80>
+#    ServerName  mdm1-srv1.metropol.com.br
+#    ServerAlias mdm1-srv1.monital.com.br
+#    SetEnv no-gzip dont-vary
+#    #SetEnv force-proxy-request-1.0 1
+#    #SetEnv proxy-nokeepalive 1
+#    FileETag None
+#    ContentDigest off
+#    LimitInternalRecursion 25
+#    <IfModule mod_ext_filter.c>    
+#	#Corrigir erro de script que forca redirecionar para ip interno
+#	ExtFilterDefine fixtext outtype=text/html mode=output cmd="/bin/sed s/10\.0\.0\.138/mdm1-srv1\.metropol\.com\.br/g"
+#	SetOutputFilter fixtext
+#    </IfModule>
+#    <IfModule mod_proxy.c>
+#	ProxyRequests Off
+#	ProxyVia Full
+#	ProxyPreserveHost On
+#	ProxyPass / http://10.0.0.138/
+#	ProxyPassReverse / http://10.0.0.138/
+#       ProxyErrorOverride Off
+#        <Proxy *>
+#		AuthType Basic
+#		AuthName "Mdm1 Srv1 - 10.0.0.138"
+#		AuthUserFile /srv/www/default/access/.htpasswd
+#		Require valid-user
+#    		Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+#    		Require host .localnet .google.com
+#    		Require local
+#		Satisfy Any
+#        </Proxy>
+#    </IfModule>
+#</VirtualHost>
+#
+##- SERVIDOR 1 - Acesso indireto atraves de outro servidor: de outro servidor vai para o modem
+#<VirtualHost *:80>
+#    ServerName  mdm1-srv2.metropol.com.br
+#    ServerAlias mdm1-srv2.monital.com.br
+#    SetEnv no-gzip dont-vary
+#    #SetEnv force-proxy-request-1.0 1
+#    #SetEnv proxy-nokeepalive 1
+#    FileETag None
+#    ContentDigest off
+#    LimitInternalRecursion 25
+#    <IfModule mod_ext_filter.c>    
+#	#Corrigir erro de script que forca redirecionar para ip interno
+#	ExtFilterDefine fixtext outtype=text/html mode=output cmd="/bin/sed s/10\.0\.0\.138/mdm1-srv2\.metropol\.com\.br/g"
+#	SetOutputFilter fixtext
+#    </IfModule>
+#    <IfModule mod_proxy.c>
+#	ProxyRequests Off
+#	ProxyVia Full
+#	ProxyPreserveHost On
+#       ProxyErrorOverride Off
+#	ProxyPass / http://10.0.0.138/
+#	ProxyPassReverse / http://10.0.0.138/
+#        <Proxy *>
+#		AuthType Basic
+#		AuthName "Mdm1 Srv2 - 10.0.0.138"
+#		AuthUserFile /srv/www/default/access/.htpasswd
+#		Require valid-user
+#		Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+#    		Require host .localnet .google.com
+#    		Require local
+#		Satisfy Any
+#        </Proxy>
+#    </IfModule>
+#</VirtualHost>
+#
+##- SERVIDOR 1 - Acesso direto para outro servidor: deste servidor vai para outro servidor (e depois de lah para o modem)
+#<VirtualHost *:80>
+#    ServerName  mdm2-srv1.metropol.com.br
+#    ServerAlias mdm2-srv1.monital.com.br
+#    SetEnv no-gzip dont-vary
+#    #SetEnv force-proxy-request-1.0 1
+#    #SetEnv proxy-nokeepalive 1
+#    FileETag None
+#    ContentDigest off
+#    LimitInternalRecursion 25
+#    <IfModule mod_proxy.c>
+#	ProxyRequests Off
+#	ProxyVia Full
+#	ProxyPreserveHost On
+#       ProxyErrorOverride Off
+#	ProxyPass / http://10.0.0.2/
+#	ProxyPassReverse / http://10.0.0.2/
+#        <Proxy *>
+#		AuthType Basic
+#		AuthName "Mdm2 Srv1 - 10.0.0.138"
+#		AuthUserFile /srv/www/default/access/.htpasswd
+#		Require valid-user
+#		Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+#    		Require host .localnet .google.com
+#    		Require local
+#		Satisfy Any
+#        </Proxy>
+#    </IfModule>
+#</VirtualHost>
+
+##- SERVIDOR 1 - Acesso direto para outro servidor: deste servidor vai para outro servidor (e depois de lah para o modem). Modem Clientes
+#<VirtualHost *:80>
+#    ServerName  mdm3-srv1.metropol.com.br
+#    ServerAlias mdm3-srv1.monital.com.br
+#    SetEnv no-gzip dont-vary
+#    #SetEnv force-proxy-request-1.0 1
+#    #SetEnv proxy-nokeepalive 1
+#    FileETag None
+#    ContentDigest off
+#    LimitInternalRecursion 25
+#    <IfModule mod_proxy.c>
+#	ProxyRequests Off
+#	ProxyVia Full
+#	ProxyPreserveHost On
+#       ProxyErrorOverride Off
+#	ProxyPass / http://192.168.254.1/
+#	ProxyPassReverse / http://192.168.254.1/
+#        <Proxy *>
+#		AuthType Basic
+#		AuthName "Mdm3 Srv1 - 192.168.254.1"
+#		AuthUserFile /srv/www/default/access/.htpasswd
+#		Require valid-user
+#    		Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+#    		Require host .localnet .google.com
+#		Require local
+#		Satisfy Any
+#        </Proxy>
+#    </IfModule>
+#</VirtualHost>
+##---------------------------------------------------------------------------------
+
+
+#-Experimental versao futura apache > 2.5: mod_sed
+#AddOutputFilter Sed html 
+#InputSed "s/monday/MON/g" 
+#OutputSed "s/sunday/SUN/g" 
+#---------------------------------------------------------------------------------
+#- SERVIDOR 2 - Acesso direto via internet: daqui vai para o modem 
+<VirtualHost *:80>
+    ServerName  mdm2-srv2.metropol.com.br
+    ServerAlias mdm2-srv2.monital.com.br
+    SetEnv no-gzip dont-vary
+    RequestHeader    unset  Accept-Encoding
+    #SetEnv force-proxy-request-1.0 1
+    #SetEnv proxy-nokeepalive 1
+    LimitInternalRecursion 25
+    FileETag None
+    ContentDigest off
+    <IfModule mod_ext_filter.c>    
+	#Corrigir erro de script que forca redirecionar para ip interno
+	ExtFilterDefine fixtext intype=text/html mode=output cmd="/bin/sed s/192\.168\.1\.1/mdm2-srv2\.metropol\.com\.br/g"
+	SetOutputFilter fixtext
+    </IfModule>
+    <IfModule mod_proxy.c>
+	ProxyRequests Off
+	ProxyVia Full
+	ProxyPreserveHost Off
+	ProxyErrorOverride Off
+	ProxyPass / http://192.168.1.1/
+	ProxyPassReverse / http://192.168.1.1/
+	ProxyPassReverseCookieDomain 192.168.1.1 mdm2-srv2.metropol.com.br
+        <Proxy *>
+                #a2enmod auth_digest
+                AuthType Digest
+		AuthName "Mdm2 Srv2 - 192.168.1.1"
+                #htdigest /srv/www/default/access/.htdigest "Mdm2 Srv2 - 192.168.1.1" marca
+                AuthDigestAlgorithm MD5
+                #AuthDigestDomain / http://mdm2-srv2.metropol.com.br/
+                AuthUserFile /srv/www/default/access/.htdigest
+
+		#AuthType Basic
+		#AuthUserFile /srv/www/default/access/.htpasswd
+		Require valid-user
+		#Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+		#Require host .localnet .google.com
+		#Require local
+		#Satisfy Any
+        </Proxy>
+    </IfModule>
+</VirtualHost>
+
+#- SERVIDOR 2 - Acesso direto via internet: daqui vai para o modem no link de clientes
+<VirtualHost *:80>
+    ServerName  mdm3-srv2.metropol.com.br
+    ServerAlias mdm3-srv2.monital.com.br
+    SetEnv no-gzip dont-vary
+    RequestHeader    unset  Accept-Encoding
+    #SetEnv force-proxy-request-1.0 1
+    #SetEnv proxy-nokeepalive 1
+    LimitInternalRecursion 25
+    FileETag None
+    ContentDigest off
+    #<IfModule mod_ext_filter.c>    
+    #	#Corrigir erro de script que forca redirecionar para ip interno
+    #	ExtFilterDefine fixtext intype=text/html mode=output cmd="/bin/sed s/192\.168\.254\.1/mdm3-srv2\.metropol\.com\.br/g"
+    #	SetOutputFilter fixtext
+    #</IfModule>
+    <IfModule mod_proxy.c>
+	ProxyRequests Off
+	ProxyVia Full
+	ProxyPreserveHost Off
+	ProxyErrorOverride Off
+	ProxyPass / http://192.168.254.1/
+	ProxyPassReverse / http://192.168.254.1/
+        ProxyBadHeader Ignore
+	# ProxyPassReverseCookieDomain 192.168.254.1 mdm3-srv2.metropol.com.br
+        <Proxy *>
+		# Auth Incompativel com o modem atual
+		#a2enmod auth_digest
+		AuthType Digest
+		AuthName "Mdm3 Srv2 - 192.168.254.1"
+		#htdigest /srv/www/default/access/.htdigest "Mdm3 Srv2 - 192.168.254.1" marca
+		AuthDigestAlgorithm MD5
+		#AuthDigestDomain / http://mdm3-srv2.metropol.com.br/
+		AuthUserFile /srv/www/default/access/.htdigest
+
+		#AuthType Basic
+		#AuthUserFile /srv/www/default/access/.htpasswd
+		#htpasswd /srv/www/default/access/.htpasswd marca
+		Require valid-user
+		#Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+		#Require host .localnet .google.com
+		#Require local
+		#Satisfy Any
+        </Proxy>
+    </IfModule>
+</VirtualHost>
+
+#- SERVIDOR 2 - Acesso indireto atraves de outro servidor: de outro servidor vai para o modem
+<VirtualHost *:80>
+    ServerName  mdm2-srv1.metropol.com.br
+    ServerAlias mdm2-srv1.monital.com.br
+    SetEnv no-gzip dont-vary
+    RequestHeader    unset  Accept-Encoding
+    #SetEnv force-proxy-request-1.0 1
+    #SetEnv proxy-nokeepalive 1
+    FileETag None
+    ContentDigest off
+    LimitInternalRecursion 25
+    <IfModule mod_ext_filter.c>    
+	#Corrigir erro de script que forca redirecionar para ip interno
+	ExtFilterDefine fixtext intype=text/html mode=output cmd="/bin/sed s/192\.168\.1\.1/mdm2-srv1\.metropol\.com\.br/g"
+	SetOutputFilter fixtext
+    </IfModule>
+    <IfModule mod_proxy.c>
+	ProxyRequests Off
+	ProxyVia Full
+	ProxyPreserveHost Off
+	ProxyErrorOverride Off
+        ProxyPass / http://192.168.1.1/
+	ProxyPassReverse / http://192.168.1.1/
+	ProxyPassReverseCookieDomain 192.168.1.1 mdm2-srv1.metropol.com.br
+        <Proxy *>
+		AuthType Basic
+		AuthName "Mdm2 Srv1 - 192.168.1.1"
+		AuthUserFile /srv/www/default/access/.htpasswd
+		Require valid-user
+		#Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+		#Require host .localnet .google.com
+		#Require local
+		#Satisfy Any
+        </Proxy>
+    </IfModule>
+</VirtualHost>
+
+#- SERVIDOR 2 - Acesso direto para outro servidor: deste servidor vai para outro servidor (e depois de lah para o modem)
+<VirtualHost *:80>
+    ServerName  mdm1-srv2.metropol.com.br
+    ServerAlias mdm1-srv2.monital.com.br
+    SetEnv no-gzip dont-vary
+    RequestHeader    unset  Accept-Encoding
+    FileETag None
+    ContentDigest off
+    LimitInternalRecursion 25
+    <IfModule mod_proxy.c>
+        ProxyRequests Off
+        ProxyVia Full
+        ProxyPreserveHost On
+        ProxyErrorOverride Off
+        ProxyPass / http://10.0.0.1/
+        ProxyPassReverse / http://10.0.0.1/
+        <Proxy *>
+		AuthType Basic
+		AuthName "Mdm1 Srv2 - 10.0.0.138"
+		AuthUserFile /srv/www/default/access/.htpasswd
+		Require valid-user
+		#Require ip 10. 192.168. 172.16. 127. 200. 201. 189. 187. 186. 143. 177. 179.
+		#Require host .localnet .google.com
+		#Require local
+		#Satisfy Any
+        </Proxy>
+    </IfModule>
+</VirtualHost>
